@@ -1,0 +1,171 @@
+<html>
+	<head>
+		<script src="https://sdk.amazonaws.com/js/aws-sdk-2.7.16.min.js"></script>
+
+		<script>
+			AWS.config.region = "us-east-1";
+			AWS.config.credentials = new AWS.CognitoIdentityCredentials({IdentityPoolId: 'us-east-1:53e682d9-0102-4330-9a82-31216cc10dc4'});
+			var LastEvaluatedKey = null,
+				year = new Date().getFullYear(),
+				Sermons = new Array(),
+				PerPage = 6
+				CurrentPage = 1,
+				Limit = PerPage,
+				TotalItems = 0,
+				LastPage = null,
+				LastYear = 2012; //No sermons before this year.
+
+			var docClient = new AWS.DynamoDB.DocumentClient();
+
+			function Init(CountLastKey) {
+				document.getElementById('status').value = "Inititalizing...";
+				var params = {
+					TableName: "Sermons",
+					ExclusiveStartkey: CountLastKey,
+					Select: "COUNT"
+				};
+
+				docClient.scan(params, function(err, data) {
+					if (err) {
+						document.getElementById('textarea').innerHTML += "Unable to describe table. Error: " + "\n" + JSON.stringify(err, undefined, 2);
+					} else {
+						TotalItems += data.Count;
+						LastPage = Math.ceil(TotalItems / PerPage);
+						document.getElementById('totalPages').innerHTML = LastPage;
+
+						//If there are more records resend this query with the LastEvaluatedKey
+						if(typeof data.LastEvaluatedKey !== 'undefined') {
+							Init(data.LastEvaluatedKey);
+						} else {
+							queryData();
+						}
+					}
+				});
+			}
+
+			function queryData() {
+				document.getElementById('status').value = "Querying Database...";
+				var params = {
+					TableName: "Sermons",
+					ProjectionExpression: "#yr,#dt,info.title,info.speaker,info.scripture",
+					KeyConditionExpression: "#yr = :yyyy",
+					ExpressionAttributeNames: {
+						"#yr" : "year",
+						"#dt" : "date"
+					},
+					ExpressionAttributeValues: {
+						":yyyy": year
+					},
+					ScanIndexForward: false,
+					ExclusiveStartKey: LastEvaluatedKey,
+					Limit: Limit
+				}
+
+				docClient.query(params, function(err, data) {
+					if (err) {
+						document.getElementById('textarea').innerHTML += "Unable to query. Error: " + "\n" + JSON.stringify(err, undefined, 2);
+					} else {
+						Sermons = Sermons.concat(data.Items);
+						LastEvaluatedKey = data.LastEvaluatedKey;
+
+						//If the count is 0 and LastEvaluatedKey is undefined then we have reached the end.
+						//For now we are also checking that the year is not > LastYear. Until the sermon archive is caught up.
+						if(data.Count == 0 && typeof data.LastEvaluatedKey === 'undefined' && year <= LastYear) {
+							Limit = 10;
+							displaySermonList("Loaded from Database.");
+							//Disable Next Page Button and set the last page value
+							document.getElementById('next').disabled = true;
+							LastPage = CurrentPage;
+						//Else If LastEvaluatedKey is not undefined then there are more sermons in this year.
+						} else if(typeof data.LastEvaluatedKey !== 'undefined') {
+							//If the data loaded is already enough for the current page
+							if(checkCache()) {
+								displaySermonList("Loaded from Database.");
+							//Otherwise Resubmit the same query with the LastEvaluatedKey
+							} else {
+								queryData();
+							}
+						//Else If LastEvaluatedKey is undefined, then last option is that count is > 0. Sincie it skipped the first IF statement.
+						} else {
+							year--;
+							//If the data loaded is already enough for the current page
+							if(checkCache()) {
+								displaySermonList("Loaded from Database.");
+							//Otherwise Resubmit the same query with the next year down and no StartKey
+							} else {
+								queryData();
+							}
+						}
+					}
+				});
+			}
+
+			function checkCache() {
+				return (Sermons.length >= CurrentPage * PerPage);
+			}
+
+			function PreviousPage() {
+				//Make sure page is greater than 1
+				if(CurrentPage > 1) {
+					CurrentPage--;
+					//If data is already loaded in cache send that;
+					if(checkCache()) {
+						displaySermonList("Loaded from Cache.");
+					} else {
+						queryData();
+					}
+
+					//If Page is now at 1 then disable button
+					if(CurrentPage == 1) {
+						document.getElementById('prev').disabled = true;
+					}
+
+					//Enable Next Page Button
+					document.getElementById('next').disabled = false;
+				} else {
+					//Disable Previous Page Button
+					document.getElementById('prev').disabled = true;
+				}
+			}
+
+			function NextPage() {
+				//Make sure page is less than Last Page
+				if(LastPage === null || CurrentPage < LastPage) {
+					CurrentPage++;
+					//If data is already loaded in cache send that;
+					if(checkCache()) {
+						displaySermonList("Loaded from Cache.");
+					} else {
+						queryData();
+					}
+					
+					//If Page is now at last page disable button
+					if(LastPage !== null && CurrentPage >= LastPage) {
+						document.getElementById('next').disabled = true;
+					}
+
+					//Enable Previous Page Button
+					document.getElementById('prev').disabled = false;
+				} else {
+					//Disable Next Page Button
+					document.getElementById('next').disabled = true;
+				}
+			}
+
+			function displaySermonList(msg) {
+				var sermonsToDisplay = Sermons.slice(((CurrentPage * PerPage) - PerPage), (CurrentPage * PerPage));
+				document.getElementById('page').value = CurrentPage;
+				document.getElementById('status').value = msg;
+				document.getElementById('textarea').innerHTML = JSON.stringify(sermonsToDisplay, undefined, 2);
+			}
+		</script>
+	</head>
+	<body onload="Init();">
+		<b>Status: </b><input id="status" readonly type="text" value="Loading..." /><br />
+		<b>Current Page: </b><input id="page" readonly type="text" value="1" /> of <b id="totalPages"></b><br />
+		<input disabled id="prev" type="button" value="Previous Page" onclick="PreviousPage();" />
+		<input id="next" type="button" value="Next Page" onclick="NextPage();" />
+		<br/><br/>
+		<textarea readonly id="textarea" style="width: 800px; height: 800px;"></textarea>
+	</body>
+</html>
