@@ -1,0 +1,16 @@
+{
+	"dependencies": {
+		"aws-sdk": "^2.604.0",
+		"uuid": "^3.3.3"
+	},
+	"name": "aws-sermonArchive-autoInserter",
+	"description": "A Node.js application to load the sermon meta data into the aws DynamoDB using AWS Lambda, when a file is uploaded.",
+	"version": "1.0.0",
+	"main": "start.js",
+	"devDependencies": {},
+	"scripts": {
+		"test": "echo \"Error: no test specified\" && exit 1"
+	},
+	"author": "Aron Brown",
+	"license": "ISC"
+}
