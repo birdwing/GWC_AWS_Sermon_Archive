@@ -6,13 +6,28 @@ AWS.config.update({
 
 var s3 = new AWS.S3({apiVersion: '2006-03-01'});
 
-var params = {
-	Bucket: "gwc-s3",
-	CopySource: "/gwc-s3/sermonArchiveIncoming/TestFile.txt",
-	Key: "Greatshoutvideo/TestFile.txt"
-};
+var bucket = "gwc-s3",
+	SourceFile = "sermonArchiveIncoming/TestFile.txt";
 
-s3.copyObject(params, function(err, data) {
-	if (err) console.log(err, err.stack);
-	else console.log(data);
+s3.copyObject({
+	Bucket: bucket,
+	CopySource: "/" + bucket + "/" + SourceFile,
+	ACL: "public-read",
+	Key: "Greatshoutvideo/TestFile.txt"
+}, function(copyerr, copydata) {
+	if (copyerr) {
+		console.log(copyerr, copyerr.stack);
+	} else {
+		console.log(copydata);
+		s3.deleteObject({
+			Bucket: bucket,
+			Key: SourceFile
+		}, function (deleteerr, deletedata) {
+			if (deleteerr) {
+				console.log(deleteerr, deleteerr.stack);
+			} else {
+				console.log(deletedata);
+			}
+		})
+	}
 });
