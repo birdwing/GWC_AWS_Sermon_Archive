@@ -39,7 +39,7 @@ exports.handler = async (event, context) => {
 			var mp3 = false;
 			var xml = false;
 			for (var i = 0, len = getFiles.Contents.length; i < len; i++) {
-					var extension = getFiles.Contents[i].Key.match(/.*\.(.*)$/);
+					var extension = getFiles.Contents[i].Key.match(/.*\.(.*)$/)[1];
 					switch(extension) {
 						case "mp4":
 							mp4 = true;
