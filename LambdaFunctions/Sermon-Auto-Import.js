@@ -15,8 +15,6 @@ exports.handler = async (event, context) => {
     const keyMatch = srckey.match(/(.*)\/([^\/]*)\/([^\/]*)$/);
     const mainFolder = keyMatch[1];
     const subFolder = keyMatch[2];
-    const fileName = keyMatch[3];
-    const destinationkey = "Greatshoutvideo/" + fileName;
     
     try {
         //Sanity Check
@@ -36,6 +34,28 @@ exports.handler = async (event, context) => {
         
         //If 3 files
         if(getFiles.Contents.length == 3) {
+			//Make sure there is one .mp4, one .mp3, and one .xml file
+			var mp4 = false;
+			var mp3 = false;
+			var xml = false;
+			for (var i = 0, len = getFiles.Contents.length; i < len; i++) {
+					var extension = getFiles.Contents[i].Key.match(/.*\.(.*)$/);
+					switch(extension) {
+						case "mp4":
+							mp4 = true;
+							break;
+						case "mp3":
+							mp3 = true;
+							break;
+						case "xml":
+							xml = true;
+							break;
+					}
+			}
+			if (!mp4 || !mp3 || !xml) {
+				throw new Error(`Error moving object ${srckey} in bucket ${bucket}. one or more of the file types uploaded are incorrect.`);
+			}
+			
             //Loop through and copy each file
             for (var i = 0, len = getFiles.Contents.length; i < len; i++) {
                 // Break the file key into parts to get filename
@@ -60,10 +80,10 @@ exports.handler = async (event, context) => {
         } else {
             return `Still waiting for files to be uploaded to: ${sourceFolder}. Expecting 3 files.`;
         }
-    } catch (copyerr) {
-        console.error(copyerr, copyerr.stack);
+    } catch (counterr) {
+        console.error(counterr, counterr.stack);
         const message = `Error moving object ${srckey} in bucket ${bucket}. Could not count how many files were in the Sub Folder.`;
-        throw new Error(copyerr);
+        throw new Error(counterr);
         //throw new Error(message)
     }
 };
