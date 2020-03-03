@@ -9,7 +9,9 @@ var s3 = new AWS.S3({apiVersion: '2006-03-01'});
 var params = {
 	Bucket: "gwc-s3",
 	MaxKeys: 10,
-	Prefix: "sermonArchiveIncoming"
+	Prefix: "sermonArchiveIncoming/subFolder/",
+	StartAfter: "sermonArchiveIncoming/subFolder/",
+	Delimiter: "/"
 };
 
 s3.listObjectsV2(params, function(err, data) {
