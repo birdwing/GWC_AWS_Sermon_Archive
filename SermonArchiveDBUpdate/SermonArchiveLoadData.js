@@ -23,7 +23,7 @@ allSermons.forEach(function(sermon) {
 				"speaker": sermon.speaker,
 				"scripture": sermon.scripture,
 				"videoURL": sermon.videoURL,
-				"aurioURL": sermon.audioURL
+				"audioURL": sermon.audioURL
 			}
 		}
 	};
