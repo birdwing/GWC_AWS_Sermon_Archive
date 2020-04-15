@@ -1,5 +1,101 @@
 [
   {
+    "title": "The Best of Times & The Worst of Times at the Same Time",
+    "speaker": "Pastor Walter Branch",
+    "scripture": "Matthew 27:62-66",
+    "date": "2020-04-12 10:30:00",
+    "videoURL": "https://gwc-s3.s3.amazonaws.com/1215/8677/7951/04-12-2020.mp4",
+    "audioURL": "https://gwc-s3.s3.amazonaws.com/6615/8677/7948/04-12-2020.mp3"
+  },
+  {
+    "title": "The Power of an Uncompromising Life",
+    "speaker": "Pastor Walter Branch",
+    "scripture": "Daniel 1:1-21",
+    "date": "2020-04-08 18:00:00",
+    "videoURL": "https://gwc-s3.s3.amazonaws.com/7115/8646/3362/04-08-2020.mp4",
+    "audioURL": "https://gwc-s3.s3.amazonaws.com/5815/8646/3356/04-08-2020.mp3"
+  },
+  {
+    "title": "The King is Coming!",
+    "speaker": "Pastor Walter Branch",
+    "scripture": "Matthew 21:1-9",
+    "date": "2020-04-05 10:30:00",
+    "videoURL": "https://gwc-s3.s3.amazonaws.com/9215/8612/7607/04-05-2020.mp4",
+    "audioURL": "https://gwc-s3.s3.amazonaws.com/9615/8612/7603/04-05-2020.mp3"
+  },
+  {
+    "title": "7 Blessings of the Cross",
+    "speaker": "Pastor Walter Branch",
+    "scripture": "John 1:1-18",
+    "date": "2020-04-01 18:00:00",
+    "videoURL": "https://gwc-s3.s3.amazonaws.com/4315/8582/8807/04-01-2020.mp4",
+    "audioURL": "https://gwc-s3.s3.amazonaws.com/5915/8582/8804/04-01-2020.mp3"
+  },
+  {
+    "title": "The Will to do God's Will",
+    "speaker": "Pastor Walter Branch",
+    "scripture": "John 7:14-17",
+    "date": "2020-03-29 10:30:00",
+    "videoURL": "https://gwc-s3.s3.amazonaws.com/1815/8552/2807/03-29-2020.mp4",
+    "audioURL": "https://gwc-s3.s3.amazonaws.com/2615/8552/2803/03-29-2020.mp3"
+  },
+  {
+    "title": "In Christ Part 4 - Receivers of the Promise",
+    "speaker": "Aron Brown",
+    "scripture": "Galatians 3:13-25",
+    "date": "2020-03-25 18:00:00",
+    "videoURL": "https://gwc-s3.s3.amazonaws.com/9015/8522/4008/03-25-2020.mp4",
+    "audioURL": "https://gwc-s3.s3.amazonaws.com/2315/8522/4005/03-25-2020.mp3"
+  },
+  {
+    "title": "Acts 29 - A Fresh Sound",
+    "speaker": "Pastor Walter Branch",
+    "scripture": "Acts 2:1-4",
+    "date": "2020-03-22 10:30:00",
+    "videoURL": "https://gwc-s3.s3.amazonaws.com/4615/8491/8007/03-22-2020.mp4",
+    "audioURL": "https://gwc-s3.s3.amazonaws.com/2515/8491/8004/03-22-2020.mp3"
+  },
+  {
+    "title": "In Christ Part 3 - If I Am in Christ",
+    "speaker": "Pastor Allen Wickey",
+    "scripture": "John 8:31-38",
+    "date": "2020-03-18 18:00:00",
+    "videoURL": "https://gwc-s3.s3.amazonaws.com/6015/8461/9210/03-18-2020.mp4",
+    "audioURL": "https://gwc-s3.s3.amazonaws.com/1515/8461/9206/03-18-2020.mp3"
+  },
+  {
+    "title": "Be Determined",
+    "speaker": "Pastor Walter Branch",
+    "scripture": "1 Kings 18:25-28",
+    "date": "2020-03-15 10:30:00",
+    "videoURL": "https://gwc-s3.s3.amazonaws.com/6615/8461/9219/03-15-2020.mp4",
+    "audioURL": "https://gwc-s3.s3.amazonaws.com/9015/8461/9216/03-15-2020.mp3"
+  },
+  {
+    "title": "In Christ Part 2 - Broken Pieces",
+    "speaker": "\"Blake\" Blakeney",
+    "scripture": "John 14:20",
+    "date": "2020-03-11 18:00:00",
+    "videoURL": "https://gwc-s3.s3.amazonaws.com/8015/8401/4408/03-11-2020.mp4",
+    "audioURL": "https://gwc-s3.s3.amazonaws.com/2015/8401/4405/03-11-2020.mp3"
+  },
+  {
+    "title": "The Lost Day",
+    "speaker": "Pastor Walter Branch",
+    "scripture": "Joshua 10:7-15",
+    "date": "2020-03-08 10:30:00",
+    "videoURL": "https://gwc-s3.s3.amazonaws.com/5015/8370/8407/03-08-2020.mp4",
+    "audioURL": "https://gwc-s3.s3.amazonaws.com/7615/8370/8404/03-08-2020.mp3"
+  },
+  {
+    "title": "In Christ Part 1 - Are You in the World, or in Christ",
+    "speaker": "Duane Needham",
+    "scripture": "John 14:17-20",
+    "date": "2020-03-04 18:00:00",
+    "videoURL": "https://gwc-s3.s3.amazonaws.com/1115/8341/3210/03-04-2020.mp4",
+    "audioURL": "https://gwc-s3.s3.amazonaws.com/3015/8341/3205/03-04-2020.mp3"
+  },
+  {
     "title": "See it, Say it, Seize it!",
     "speaker": "Pastor Walter Branch",
     "scripture": "Judges 6:1-40; Judges 7:1-25",
@@ -137,7 +233,7 @@
   },
   {
     "title": "Don't Be Deceived",
-    "speaker": "Blake\" Blakeney",
+    "speaker": "\"Blake\" Blakeney",
     "scripture": "Genesis 3:1-7",
     "date": "2019-11-17 10:30:00",
     "videoURL": "https://gwc-s3.s3.amazonaws.com/4515/7403/5209/11-17-2019.mp4",
