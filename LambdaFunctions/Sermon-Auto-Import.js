@@ -49,6 +49,51 @@ async function moveFiles(s3, bucket, files, destination) {
 	return files;
 };
 
+async function addSermon(db, sermon, audioFilename, videoFilename, destination) {
+	var year = sermon.Date.substring(0,4);
+	var urlPrefix = "https://gwc-s3.s3.amazonaws.com/";
+	var params = {
+		TableName: "Sermons",
+		Item: {
+			"date": {
+				"S": sermon.Date
+			},
+			"info": {
+				"M": {
+					"title": {
+						"S": sermon.Title
+					},
+					"speaker": {
+						"S": sermon.Speaker
+					},
+					"scripture": {
+						"S": sermon.Scripture
+					},
+					"videoURL": {
+						"S": urlPrefix + destination + videoFilename
+					},
+					"audioURL": {
+						"S": urlPrefix + destination + audioFilename
+					}
+				}
+			},
+			"year": {
+				"N": year
+			}
+		}
+	};
+	
+	try {
+		var insertSermon = await db.putItem(params).promise();
+	} catch (dberr) {
+		console.error(dberr, dberr.stack);
+		const message = `Error adding sermon to Archive.`;
+		throw new Error(message);
+	}
+	
+	return true;
+};
+
 async function deleteFiles(s3, bucket, folder, files) {
 	//Loop through and delete each file
 	for (var i = 0, len = files.length; i < len; i++) {
@@ -115,14 +160,18 @@ exports.handler = async (event, context) => {
 			var mp3 = false;
 			var xml = false;
 			var xmlKey = '';
+			var videoFilename = '';
+			var audioFilename = '';
 			for (var i = 0, len = getFiles.Contents.length; i < len; i++) {
 					var extension = getFiles.Contents[i].Key.match(/.*\.(.*)$/)[1];
 					switch(extension) {
 						case "mp4":
 							mp4 = true;
+							videoFilename = getFiles.Contents[i].Key.match(/(.*)\/([^\/]*)\/([^\/]*)$/)[3];
 							break;
 						case "mp3":
 							mp3 = true;
+							audioFilename = getFiles.Contents[i].Key.match(/(.*)\/([^\/]*)\/([^\/]*)$/)[3];
 							break;
 						case "xml":
 							xml = true;
@@ -140,7 +189,12 @@ exports.handler = async (event, context) => {
 			var destination = dateMatch[1] + "/" + dateMatch[2] + "/" + dateMatch[3] + "/";
 			//Move the returned files.
 			var movedFiles = await moveFiles(s3, bucket, getFiles.Contents, destination);
-			//All files moved, delete them.
+			//All files moved, add sermon to archive.
+			var archived = await addSermon(new aws.DynamoDB({
+				region: "us-east-1",
+				endpoint: "https://dynamodb.us-east-1.amazonaws.com"
+			}), sermonData, audioFilename, videoFilename, destination);
+			//Sermon added to DB delete files.
 			var folderToDelete = await deleteFiles(s3, bucket, mainFolder + "/" + subFolder, movedFiles);
 			//All files deleted, delete folder.
 			var deletedFolder = await deleteFolder(s3, bucket,folderToDelete,sermonData);
