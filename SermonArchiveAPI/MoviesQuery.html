@@ -17,17 +17,17 @@
 				LastYear = 2012; //No sermons before this year.
 			//Create objects to both store data and provide functionality
 			var	Status = {
-					value: "",
+					_value: "",
 					get: function(){
-						return this.value;
+						return this._value;
 					},
 					set: function(x, object) {
-						this.value = x;
+						this._value = x;
 						//If a DOM object was passed display the value in that object
 						if(typeof object !== 'undefined') {
-							object.value = this.value;
+							object.value = this._value;
 						}
-						return this.value = x;
+						return this._value;
 					}
 				};
 
