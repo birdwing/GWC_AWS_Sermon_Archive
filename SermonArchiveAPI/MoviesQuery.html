@@ -71,7 +71,6 @@
 						//If the count is 0 and LastEvaluatedKey is undefined then we have reached the end.
 						//For now we are also checking that the year is not > LastYear. Until the sermon archive is caught up.
 						if(data.Count == 0 && typeof data.LastEvaluatedKey === 'undefined' && year <= LastYear) {
-							Limit = 10;
 							displaySermonList("Loaded from Database.");
 							//Disable Next Page Button and set the last page value
 							document.getElementById('next').disabled = true;
