@@ -15,16 +15,17 @@
 				TotalItems = 0,
 				LastPage = null,
 				LastYear = 2012; //No sermons before this year.
-			//Create object to both store data and provide functionality
+			//Create objects to both store data and provide functionality
 			var	Status = {
 					value: "",
 					get: function(){
 						return this.value;
 					},
 					set: function(x, object) {
-						//If a DOM object was passed
+						this.value = x;
+						//If a DOM object was passed display the value in that object
 						if(typeof object !== 'undefined') {
-							object.value = x;
+							object.value = this.value;
 						}
 						return this.value = x;
 					}
