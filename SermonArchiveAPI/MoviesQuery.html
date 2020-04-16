@@ -101,7 +101,7 @@
 			}
 
 			function checkCache() {
-				return (Sermons.length >= CurrentPage * PerPage);
+				return ((Sermons.length >= CurrentPage * PerPage) || (Sermons.length == TotalItems));
 			}
 
 			function PreviousPage() {
