@@ -5,6 +5,7 @@
 		<script>
 			AWS.config.region = "us-east-1";
 			AWS.config.credentials = new AWS.CognitoIdentityCredentials({IdentityPoolId: 'us-east-1:53e682d9-0102-4330-9a82-31216cc10dc4'});
+			//Create variables to store information about where a user is in the archive.
 			var LastEvaluatedKey = null,
 				year = new Date().getFullYear(),
 				Sermons = new Array(),
@@ -14,11 +15,25 @@
 				TotalItems = 0,
 				LastPage = null,
 				LastYear = 2012; //No sermons before this year.
+			//Create object to both store data and provide functionality
+			var	Status = {
+					value: "",
+					get: function(){
+						return this.value;
+					},
+					set: function(x, object) {
+						//If a DOM object was passed
+						if(typeof object !== 'undefined') {
+							object.value = x;
+						}
+						return this.value = x;
+					}
+				};
 
 			var docClient = new AWS.DynamoDB.DocumentClient();
 
 			function Init(CountLastKey) {
-				document.getElementById('status').value = "Inititalizing...";
+				Status.set("Inititalizing...", document.getElementById('status'));
 				var params = {
 					TableName: "Sermons",
 					ExclusiveStartkey: CountLastKey,
@@ -44,7 +59,7 @@
 			}
 
 			function queryData() {
-				document.getElementById('status').value = "Querying Database...";
+				Status.set("Querying Database...", document.getElementById('status'));
 				var params = {
 					TableName: "Sermons",
 					ProjectionExpression: "#yr,#dt,info.title,info.speaker,info.scripture",
@@ -154,17 +169,19 @@
 			function displaySermonList(msg) {
 				var sermonsToDisplay = Sermons.slice(((CurrentPage * PerPage) - PerPage), (CurrentPage * PerPage));
 				document.getElementById('page').value = CurrentPage;
-				document.getElementById('status').value = msg;
+				Status.set(msg, document.getElementById('status'));
 				document.getElementById('textarea').innerHTML = JSON.stringify(sermonsToDisplay, undefined, 2);
 			}
 		</script>
 	</head>
 	<body onload="Init();">
-		<b>Status: </b><input id="status" readonly type="text" value="Loading..." /><br />
-		<b>Current Page: </b><input id="page" readonly type="text" value="1" /> of <b id="totalPages"></b><br />
-		<input disabled id="prev" type="button" value="Previous Page" onclick="PreviousPage();" />
-		<input id="next" type="button" value="Next Page" onclick="NextPage();" />
-		<br/><br/>
-		<textarea readonly id="textarea" style="width: 800px; height: 800px;"></textarea>
+		<div id="SermonList">
+			<b>Status: </b><input id="status" readonly type="text" value="Loading..." /><br />
+			<b>Current Page: </b><input id="page" readonly type="text" value="1" /> of <b id="totalPages"></b><br />
+			<input disabled id="prev" type="button" value="Previous Page" onclick="PreviousPage();" />
+			<input id="next" type="button" value="Next Page" onclick="NextPage();" />
+			<br/><br/>
+			<textarea readonly id="textarea" style="width: 800px; height: 800px;"></textarea>
+		</div>
 	</body>
 </html>
