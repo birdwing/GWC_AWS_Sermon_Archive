@@ -63,11 +63,9 @@ function SermonList(ItemsPerPage, Region, Identity) {
 		list.Status.set("Querying Database...", document.getElementById('status'));
 		var params = {
 			TableName: "Sermons",
-			ProjectionExpression: "#yr,#dt,info.title,info.speaker,info.scripture",
 			KeyConditionExpression: "#yr = :yyyy",
 			ExpressionAttributeNames: {
-				"#yr" : "year",
-				"#dt" : "date"
+				"#yr" : "year"
 			},
 			ExpressionAttributeValues: {
 				":yyyy": CurrentYear
