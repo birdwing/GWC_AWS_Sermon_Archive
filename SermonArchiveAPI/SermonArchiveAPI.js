@@ -15,8 +15,7 @@ function SermonList(ItemsPerPage, Region, Identity) {
 	var Limit = PerPage;
 	var TotalItems = 0;
 	var LastPage = null;
-	//this._LastYear = 2012; //No sermons before this year.
-	var LastYear = 2012; //No sermons before this year.
+	var LastPageCheck = false;
 	this.Status = {
 		_value: "",
 		get: function(){
@@ -85,15 +84,18 @@ function SermonList(ItemsPerPage, Region, Identity) {
 				Sermons = Sermons.concat(data.Items);
 				LastEvaluatedKey = data.LastEvaluatedKey;
 
-				//If the count is 0 and LastEvaluatedKey is undefined then we have reached the end.
-				//For now we are also checking that the year is not > LastYear. Until the sermon archive is caught up.
-				if(data.Count == 0 && typeof data.LastEvaluatedKey === 'undefined' && CurrentYear <= LastYear) {
+				//If the count is 0, LastEvaluatedKey is undefined, and current page is the same as last page then we have reached the end.
+				//If LastPageCheck is false that means we should check the next year,
+				if(data.Count == 0 && typeof data.LastEvaluatedKey === 'undefined' && CurrentPage == LastPage && LastPageCheck) {
 					list.displaySermonList("Loaded from Database.");
 					//Disable Next Page Button and set the last page value
 					document.getElementById('next').disabled = true;
 					LastPage = CurrentPage;
 				//Else If LastEvaluatedKey is not undefined then there are more sermons in this year.
 				} else if(typeof data.LastEvaluatedKey !== 'undefined') {
+					// There are results, if this was a last page check, reset the flag.
+					LastPageCheck = false;
+					
 					//If the data loaded is already enough for the current page
 					if(list._checkCache()) {
 						list.displaySermonList("Loaded from Database.");
@@ -104,6 +106,9 @@ function SermonList(ItemsPerPage, Region, Identity) {
 				//Else If LastEvaluatedKey is undefined, then last option is that count is > 0. Sincie it skipped the first IF statement.
 				} else {
 					CurrentYear--;
+					// We moved to the next year, so set the LastPageCheck flag, to check if this is the last year.
+					LastPageCheck = true;
+					
 					//If the data loaded is already enough for the current page
 					if(list._checkCache()) {
 						list.displaySermonList("Loaded from Database.");
