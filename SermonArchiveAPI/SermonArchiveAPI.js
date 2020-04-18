@@ -1,21 +1,22 @@
 //Create a List object to store properties and information about the sermon list.
-function SermonList(PerPage, Region, Identity) {
+function SermonList(ItemsPerPage, Region, Identity) {
 	//Setup internal AWS object
-	this._AWS = AWS;
-	this._AWS.config.region = Region;
-	this._AWS.config.credentials = new this._AWS.CognitoIdentityCredentials({IdentityPoolId: Identity});
-	this._docClient = new this._AWS.DynamoDB.DocumentClient();
+	var _AWS = AWS;
+	_AWS.config.region = Region;
+	_AWS.config.credentials = new _AWS.CognitoIdentityCredentials({IdentityPoolId: Identity});
+	var docClient = new _AWS.DynamoDB.DocumentClient();
 	
 	//Create variables to store information about where a user is in the list.
-	this._LastEvaluatedKey = null;
-	this._year = new Date().getFullYear();
-	this._Sermons = new Array();
-	this._PerPage = PerPage;
-	this._CurrentPage = 1;
-	this._Limit = PerPage;
-	this._TotalItems = 0;
-	this._LastPage = null;
-	this._LasyYear = 2012; //No sermons before this year.
+	var LastEvaluatedKey = null;
+	var CurrentYear = new Date().getFullYear();
+	var Sermons = new Array();
+	var PerPage = ItemsPerPage;
+	var CurrentPage = 1;
+	var Limit = PerPage;
+	var TotalItems = 0;
+	var LastPage = null;
+	//this._LastYear = 2012; //No sermons before this year.
+	var LastYear = 2012; //No sermons before this year.
 	this.Status = {
 		_value: "",
 		get: function(){
@@ -40,13 +41,13 @@ function SermonList(PerPage, Region, Identity) {
 			Select: "COUNT"
 		};
 
-		list._docClient.scan(params, function(err, data) {
+		docClient.scan(params, function(err, data) {
 			if (err) {
 				document.getElementById('textarea').innerHTML += "Unable to describe table. Error: " + "\n" + JSON.stringify(err, undefined, 2);
 			} else {
-				list._TotalItems += data.Count;
-				list._LastPage = Math.ceil(list._TotalItems / list._PerPage);
-				document.getElementById('totalPages').innerHTML = list._LastPage;
+				TotalItems += data.Count;
+				LastPage = Math.ceil(TotalItems / PerPage);
+				document.getElementById('totalPages').innerHTML = LastPage;
 
 				//If there are more records resend this query with the LastEvaluatedKey
 				if(typeof data.LastEvaluatedKey !== 'undefined') {
@@ -70,27 +71,27 @@ function SermonList(PerPage, Region, Identity) {
 				"#dt" : "date"
 			},
 			ExpressionAttributeValues: {
-				":yyyy": list._year
+				":yyyy": CurrentYear
 			},
 			ScanIndexForward: false,
-			ExclusiveStartKey: list._LastEvaluatedKey,
-			Limit: list._Limit
+			ExclusiveStartKey: LastEvaluatedKey,
+			Limit: Limit
 		}
 		
-		list._docClient.query(params, function(err, data) {
+		docClient.query(params, function(err, data) {
 			if (err) {
 				document.getElementById('textarea').innerHTML += "Unable to query. Error: " + "\n" + JSON.stringify(err, undefined, 2);
 			} else {
-				list._Sermons = list._Sermons.concat(data.Items);
-				list._LastEvaluatedKey = data.LastEvaluatedKey;
+				Sermons = Sermons.concat(data.Items);
+				LastEvaluatedKey = data.LastEvaluatedKey;
 
 				//If the count is 0 and LastEvaluatedKey is undefined then we have reached the end.
 				//For now we are also checking that the year is not > LastYear. Until the sermon archive is caught up.
-				if(data.Count == 0 && typeof data.LastEvaluatedKey === 'undefined' && list._year <= list._LastYear) {
+				if(data.Count == 0 && typeof data.LastEvaluatedKey === 'undefined' && CurrentYear <= LastYear) {
 					list.displaySermonList("Loaded from Database.");
 					//Disable Next Page Button and set the last page value
 					document.getElementById('next').disabled = true;
-					list._LastPage = list._CurrentPage;
+					LastPage = CurrentPage;
 				//Else If LastEvaluatedKey is not undefined then there are more sermons in this year.
 				} else if(typeof data.LastEvaluatedKey !== 'undefined') {
 					//If the data loaded is already enough for the current page
@@ -102,7 +103,7 @@ function SermonList(PerPage, Region, Identity) {
 					}
 				//Else If LastEvaluatedKey is undefined, then last option is that count is > 0. Sincie it skipped the first IF statement.
 				} else {
-					list._year--;
+					CurrentYear--;
 					//If the data loaded is already enough for the current page
 					if(list._checkCache()) {
 						list.displaySermonList("Loaded from Database.");
@@ -116,13 +117,13 @@ function SermonList(PerPage, Region, Identity) {
 	};
 	
 	this._checkCache = function() {
-		return ((this._Sermons.length >= this._CurrentPage * this._PerPage) || (this._Sermons.length === this._TotalItems));
+		return ((Sermons.length >= CurrentPage * PerPage) || (Sermons.length === TotalItems));
 	};
 	
 	this.PreviousPage = function() {
 		//Make sure page is greater than 1
-		if(this._CurrentPage > 1) {
-			this._CurrentPage--;
+		if(CurrentPage > 1) {
+			CurrentPage--;
 			//If data is already loaded in cache send that;
 			if(this._checkCache()) {
 				this.displaySermonList("Loaded from Cache.");
@@ -131,7 +132,7 @@ function SermonList(PerPage, Region, Identity) {
 			}
 
 			//If Page is now at 1 then disable button
-			if(this._CurrentPage == 1) {
+			if(CurrentPage == 1) {
 				document.getElementById('prev').disabled = true;
 			}
 
@@ -145,8 +146,8 @@ function SermonList(PerPage, Region, Identity) {
 	
 	this.NextPage = function() {
 		//Make sure page is less than Last Page
-		if(this._LastPage === null || this._CurrentPage < this._LastPage) {
-			this._CurrentPage++;
+		if(LastPage === null || CurrentPage < LastPage) {
+			CurrentPage++;
 			//If data is already loaded in cache send that;
 			if(this._checkCache()) {
 				this.displaySermonList("Loaded from Cache.");
@@ -155,7 +156,7 @@ function SermonList(PerPage, Region, Identity) {
 			}
 			
 			//If Page is now at last page disable button
-			if(this._LastPage !== null && this._CurrentPage >= this._LastPage) {
+			if(LastPage !== null && CurrentPage >= LastPage) {
 				document.getElementById('next').disabled = true;
 			}
 
@@ -168,8 +169,8 @@ function SermonList(PerPage, Region, Identity) {
 	};
 	
 	this.displaySermonList = function(msg) {
-		var sermonsToDisplay = this._Sermons.slice(((this._CurrentPage * this._PerPage) - this._PerPage), (this._CurrentPage * this._PerPage));
-		document.getElementById('page').value = this._CurrentPage;
+		var sermonsToDisplay = Sermons.slice(((CurrentPage * PerPage) - PerPage), (CurrentPage * PerPage));
+		document.getElementById('page').value = CurrentPage;
 		this.Status.set(msg, document.getElementById('status'));
 		document.getElementById('textarea').innerHTML = JSON.stringify(sermonsToDisplay, undefined, 2);
 	}
