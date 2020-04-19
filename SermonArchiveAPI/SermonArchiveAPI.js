@@ -32,7 +32,7 @@ function SermonList(ItemsPerPage, Region, Identity) {
 	};
 	
 	//Initialize Object
-	this.Init = function(CountLastKey, list) {
+	var Init = function(CountLastKey) {
 		Status.set("Inititalizing...", document.getElementById('status'));
 		var params = {
 			TableName: "Sermons",
@@ -50,16 +50,16 @@ function SermonList(ItemsPerPage, Region, Identity) {
 
 				//If there are more records resend this query with the LastEvaluatedKey
 				if(typeof data.LastEvaluatedKey !== 'undefined') {
-					list.Init(data.LastEvaluatedKey, list);
+					Init(data.LastEvaluatedKey);
 				} else {
-					list._queryData(list);
+					queryData();
 				}
 			}
 		});
 	};
 	
 	//Define internal functions for retrieving and displaying Sermon List data
-	this._queryData = function(list) {
+	var queryData = function() {
 		Status.set("Querying Database...", document.getElementById('status'));
 		var params = {
 			TableName: "Sermons",
@@ -85,7 +85,7 @@ function SermonList(ItemsPerPage, Region, Identity) {
 				//If the count is 0, LastEvaluatedKey is undefined, and current page is the same as last page then we have reached the end.
 				//If LastPageCheck is false that means we should check the next year,
 				if(data.Count == 0 && typeof data.LastEvaluatedKey === 'undefined' && CurrentPage == LastPage && LastPageCheck) {
-					list.displaySermonList("Loaded from Database.");
+					displaySermonList("Loaded from Database.");
 					//Disable Next Page Button and set the last page value
 					document.getElementById('next').disabled = true;
 					LastPage = CurrentPage;
@@ -95,11 +95,11 @@ function SermonList(ItemsPerPage, Region, Identity) {
 					LastPageCheck = false;
 					
 					//If the data loaded is already enough for the current page
-					if(list._checkCache()) {
-						list.displaySermonList("Loaded from Database.");
+					if(checkCache()) {
+						displaySermonList("Loaded from Database.");
 					//Otherwise Resubmit the same query with the LastEvaluatedKey
 					} else {
-						list._queryData(list);
+						queryData();
 					}
 				//Else If LastEvaluatedKey is undefined, then last option is that count is > 0. Sincie it skipped the first IF statement.
 				} else {
@@ -108,18 +108,18 @@ function SermonList(ItemsPerPage, Region, Identity) {
 					LastPageCheck = true;
 					
 					//If the data loaded is already enough for the current page
-					if(list._checkCache()) {
-						list.displaySermonList("Loaded from Database.");
+					if(checkCache()) {
+						displaySermonList("Loaded from Database.");
 					//Otherwise Resubmit the same query with the next year down and no StartKey
 					} else {
-						list._queryData(list);
+						queryData();
 					}
 				}
 			}
 		});
 	};
 	
-	this._checkCache = function() {
+	var checkCache = function() {
 		return ((Sermons.length >= CurrentPage * PerPage) || (Sermons.length === TotalItems));
 	};
 	
@@ -128,10 +128,10 @@ function SermonList(ItemsPerPage, Region, Identity) {
 		if(CurrentPage > 1) {
 			CurrentPage--;
 			//If data is already loaded in cache send that;
-			if(this._checkCache()) {
-				this.displaySermonList("Loaded from Cache.");
+			if(checkCache()) {
+				displaySermonList("Loaded from Cache.");
 			} else {
-				this._queryData(this);
+				queryData();
 			}
 
 			//If Page is now at 1 then disable button
@@ -152,10 +152,10 @@ function SermonList(ItemsPerPage, Region, Identity) {
 		if(LastPage === null || CurrentPage < LastPage) {
 			CurrentPage++;
 			//If data is already loaded in cache send that;
-			if(this._checkCache()) {
-				this.displaySermonList("Loaded from Cache.");
+			if(checkCache()) {
+				displaySermonList("Loaded from Cache.");
 			} else {
-				this._queryData(this);
+				queryData();
 			}
 			
 			//If Page is now at last page disable button
@@ -171,12 +171,12 @@ function SermonList(ItemsPerPage, Region, Identity) {
 		}
 	};
 	
-	this.displaySermonList = function(msg) {
+	var displaySermonList = function(msg) {
 		var sermonsToDisplay = Sermons.slice(((CurrentPage * PerPage) - PerPage), (CurrentPage * PerPage));
 		document.getElementById('page').value = CurrentPage;
 		Status.set(msg, document.getElementById('status'));
 		document.getElementById('textarea').innerHTML = JSON.stringify(sermonsToDisplay, undefined, 2);
 	}
 	
-	this.Init(null, this);
+	Init(null);
 }
