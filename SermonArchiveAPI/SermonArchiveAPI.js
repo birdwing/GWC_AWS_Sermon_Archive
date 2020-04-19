@@ -16,7 +16,7 @@ function SermonList(ItemsPerPage, Region, Identity) {
 	var TotalItems = 0;
 	var LastPage = null;
 	var LastPageCheck = false;
-	this.Status = {
+	var Status = {
 		_value: "",
 		get: function(){
 			return this._value;
@@ -33,7 +33,7 @@ function SermonList(ItemsPerPage, Region, Identity) {
 	
 	//Initialize Object
 	this.Init = function(CountLastKey, list) {
-		list.Status.set("Inititalizing...", document.getElementById('status'));
+		Status.set("Inititalizing...", document.getElementById('status'));
 		var params = {
 			TableName: "Sermons",
 			ExclusiveStartkey: CountLastKey,
@@ -60,7 +60,7 @@ function SermonList(ItemsPerPage, Region, Identity) {
 	
 	//Define internal functions for retrieving and displaying Sermon List data
 	this._queryData = function(list) {
-		list.Status.set("Querying Database...", document.getElementById('status'));
+		Status.set("Querying Database...", document.getElementById('status'));
 		var params = {
 			TableName: "Sermons",
 			KeyConditionExpression: "#yr = :yyyy",
@@ -174,7 +174,7 @@ function SermonList(ItemsPerPage, Region, Identity) {
 	this.displaySermonList = function(msg) {
 		var sermonsToDisplay = Sermons.slice(((CurrentPage * PerPage) - PerPage), (CurrentPage * PerPage));
 		document.getElementById('page').value = CurrentPage;
-		this.Status.set(msg, document.getElementById('status'));
+		Status.set(msg, document.getElementById('status'));
 		document.getElementById('textarea').innerHTML = JSON.stringify(sermonsToDisplay, undefined, 2);
 	}
 	
