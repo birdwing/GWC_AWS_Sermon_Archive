@@ -70,7 +70,7 @@ function SermonList(Options) {
 
 		docClient.scan(params, function(err, data) {
 			if (err) {
-				document.getElementById('textarea').innerHTML += "Unable to describe table. Error: " + "\n" + JSON.stringify(err, undefined, 2);
+				throw "Unable to describe table. Error: " + "\n" + JSON.stringify(err, undefined, 2);
 			} else {
 				TotalItems += data.Count;
 				LastPage = Math.ceil(TotalItems / PerPage);
@@ -105,7 +105,7 @@ function SermonList(Options) {
 		
 		docClient.query(params, function(err, data) {
 			if (err) {
-				document.getElementById('textarea').innerHTML += "Unable to query. Error: " + "\n" + JSON.stringify(err, undefined, 2);
+				throw "Database Query Error: " + "\n" + JSON.stringify(err, undefined, 2);
 			} else {
 				Sermons = Sermons.concat(data.Items);
 				LastEvaluatedKey = data.LastEvaluatedKey;
