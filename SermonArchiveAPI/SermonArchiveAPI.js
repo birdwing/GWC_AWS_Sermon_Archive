@@ -85,7 +85,8 @@ function SermonList(ItemsPerPage, Region, Identity) {
 				//If the count is 0, LastEvaluatedKey is undefined, and current page is the same as last page then we have reached the end.
 				//If LastPageCheck is false that means we should check the next year,
 				if(data.Count == 0 && typeof data.LastEvaluatedKey === 'undefined' && CurrentPage == LastPage && LastPageCheck) {
-					displaySermonList("Loaded from Database.");
+					Status.set("Loaded from Database.", document.getElementById('status'));
+					displaySermonList();
 					//Disable Next Page Button and set the last page value
 					document.getElementById('next').disabled = true;
 					LastPage = CurrentPage;
@@ -96,7 +97,8 @@ function SermonList(ItemsPerPage, Region, Identity) {
 					
 					//If the data loaded is already enough for the current page
 					if(checkCache()) {
-						displaySermonList("Loaded from Database.");
+						Status.set("Loaded from Database.", document.getElementById('status'));
+						displaySermonList();
 					//Otherwise Resubmit the same query with the LastEvaluatedKey
 					} else {
 						queryData();
@@ -109,7 +111,8 @@ function SermonList(ItemsPerPage, Region, Identity) {
 					
 					//If the data loaded is already enough for the current page
 					if(checkCache()) {
-						displaySermonList("Loaded from Database.");
+						Status.set("Loaded from Database.", document.getElementById('status'));
+						displaySermonList();
 					//Otherwise Resubmit the same query with the next year down and no StartKey
 					} else {
 						queryData();
@@ -129,7 +132,8 @@ function SermonList(ItemsPerPage, Region, Identity) {
 			CurrentPage--;
 			//If data is already loaded in cache send that;
 			if(checkCache()) {
-				displaySermonList("Loaded from Cache.");
+				Status.set("Loaded from Cache.", document.getElementById('status'));
+				displaySermonList();
 			} else {
 				queryData();
 			}
@@ -153,7 +157,8 @@ function SermonList(ItemsPerPage, Region, Identity) {
 			CurrentPage++;
 			//If data is already loaded in cache send that;
 			if(checkCache()) {
-				displaySermonList("Loaded from Cache.");
+				Status.set("Loaded from Cache.", document.getElementById('status'));
+				displaySermonList();
 			} else {
 				queryData();
 			}
@@ -171,10 +176,9 @@ function SermonList(ItemsPerPage, Region, Identity) {
 		}
 	};
 	
-	var displaySermonList = function(msg) {
+	var displaySermonList = function() {
 		var sermonsToDisplay = Sermons.slice(((CurrentPage * PerPage) - PerPage), (CurrentPage * PerPage));
 		document.getElementById('page').value = CurrentPage;
-		Status.set(msg, document.getElementById('status'));
 		document.getElementById('textarea').innerHTML = JSON.stringify(sermonsToDisplay, undefined, 2);
 	}
 	
