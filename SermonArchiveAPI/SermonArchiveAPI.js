@@ -1,16 +1,44 @@
 //Create a List object to store properties and information about the sermon list.
-function SermonList(ItemsPerPage, Region, Identity) {
+function SermonList(Options) {
+	/* -------------------------------------------------- *|
+	|* Check options and set defaults for missing options *|
+	|* -------------------------------------------------- */
+	//If no options were passed in create an empty object to fill later
+	if(typeof Options === 'undefined' || Options == null) {
+		var Options = {};
+	}
+	//If Options variable passed was not an object
+	if(typeof Options !== 'object') {
+		throw new TypeError('Options variable must be an object.'); 
+	}
+	//See if ItemsPerPage was passed, if not set it to a default of 6.
+	if(typeof Options.ItemsPerPage === 'undefined' || Options.ItemsPerPage == null) {
+		Options.ItemsPerPage = 6;
+	}
+	//Make sure ItemsPerPage is a number.
+	if(typeof Options.ItemsPerPage !== 'number') {
+		throw new TypeError('ItemsPerPage option must be a number.');
+	}
+	//Make sure Region Option exists
+	if(typeof Options.Region === 'undefined' || Options.Region == null) {
+		throw new TypeError('Region option must be defined, and be a valid AWS region.');
+	}
+	//Make sure Identity option exists
+	if(typeof Options.Identity === 'undefined' || Options.Identity == null) {
+		throw new TypeError('Identity option must be defined, and be a valid AWS Cognito Identity Pool Id.');
+	}
+	
 	//Setup internal AWS object
 	var _AWS = AWS;
-	_AWS.config.region = Region;
-	_AWS.config.credentials = new _AWS.CognitoIdentityCredentials({IdentityPoolId: Identity});
+	_AWS.config.region = Options.Region;
+	_AWS.config.credentials = new _AWS.CognitoIdentityCredentials({IdentityPoolId: Options.Identity});
 	var docClient = new _AWS.DynamoDB.DocumentClient();
-	
+
 	//Create variables to store information about where a user is in the list.
 	var LastEvaluatedKey = null;
 	var CurrentYear = new Date().getFullYear();
 	var Sermons = new Array();
-	var PerPage = ItemsPerPage;
+	var PerPage = Options.ItemsPerPage;
 	var CurrentPage = 1;
 	var Limit = PerPage;
 	var TotalItems = 0;

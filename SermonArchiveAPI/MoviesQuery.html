@@ -4,7 +4,11 @@
 		<script src="SermonArchiveAPI.js"></script>
 
 		<script>
-			var GWCSermonList = new SermonList(6, 'us-east-1', 'us-east-1:53e682d9-0102-4330-9a82-31216cc10dc4');
+			var SermonListOptions = {
+				Region: 'us-east-1',
+				Identity:'us-east-1:53e682d9-0102-4330-9a82-31216cc10dc4'
+			};
+			var GWCSermonList = new SermonList(SermonListOptions);
 		</script>
 	</head>
 	<body>
