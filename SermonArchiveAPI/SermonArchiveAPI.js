@@ -27,6 +27,60 @@ function SermonList(Options) {
 	if(typeof Options.Identity === 'undefined' || Options.Identity == null) {
 		throw new TypeError('Identity option must be defined, and be a valid AWS Cognito Identity Pool Id.');
 	}
+		
+	/* Setup Events */
+	//If onSermonArchiveError function was not passed set it a function that throws the error
+	if(typeof Options.onSermonArchiveError === 'undefined' || Options.onSermonArchiveError == null) {
+		Options.onSermonArchiveError = function(data) {
+			throw new Error(data.msg);
+		}
+	}
+	//Make sure onSermonArchiveError is a function
+	if(typeof Options.onSermonArchiveError !== 'function') {
+		throw new TypeError('onSermonArhiveError must be a function.');
+	}
+	//If onSermonArchiveInit function was not passed set it to a blank function
+	if(typeof Options.onSermonArchiveInit === 'undefined' || Options.onSermonArchiveInit == null) {
+		Options.onSermonArchiveInit = function() {};
+	}
+	//Make sure onSermonArchiveInit is a function
+	if(typeof Options.onSermonArchiveInit !== 'function') {
+		throw new TypeError('onSermonArhiveInit must be a function.');
+	}
+	//If afterSermonArchiveInit function was not passed set it to a blank function
+	if(typeof Options.afterSermonArchiveInit === 'undefined' || Options.afterSermonArchiveInit == null) {
+		Options.afterSermonArchiveInit = function(data) {};
+	}
+	//Make sure afterSermonArchiveInit is a function
+	if(typeof Options.afterSermonArchiveInit !== 'function') {
+		throw new TypeError('afterSermonArchiveInit must be a function.');
+	}
+	//If onSermonArchiveRequest function was not passed set it to a blank function
+	if(typeof Options.onSermonArchiveRequest === 'undefined' || Options.onSermonArchiveRequest == null) {
+		Options.onSermonArchiveRequest = function() {};
+	}
+	//Make sure onSermonArchiveRequest is a function
+	if(typeof Options.onSermonArchiveRequest !== 'function') {
+		throw new TypeError('onSermonArchiveRequest must be a function.');
+	}
+	//If afterSermonArchiveRequest function was not passed set it to a blank function
+	if(typeof Options.afterSermonArchiveRequest === 'undefined' || Options.afterSermonArchiveRequest == null) {
+		Options.afterSermonArchiveRequest = function(data) {};
+	}
+	//Make sure afterSermonArchiveRequest is a function
+	if(typeof Options.afterSermonArchiveRequest !== 'function') {
+		throw new TypeError('afterSermonArchiveRequest must be a function.');
+	}
+	//Caller Function for afterSermonArchiveRequest
+	var afterRequest = function(source) {
+		Options.afterSermonArchiveRequest({
+			Source: source,
+			Sermons: Sermons,
+			LastPage: LastPage,
+			CurrentPage: CurrentPage,
+			PerPage: PerPage
+		});
+	}
 	
 	//Setup internal AWS object
 	var _AWS = AWS;
@@ -61,7 +115,11 @@ function SermonList(Options) {
 	
 	//Initialize Object
 	var Init = function(CountLastKey) {
-		Status.set("Inititalizing...", document.getElementById('status'));
+		//Call onInit Event if this is the first call to the init function
+		if(typeof CountLastKey === 'undefined' || CountLastKey == null) {
+			Options.onSermonArchiveInit();
+		}
+		
 		var params = {
 			TableName: "Sermons",
 			ExclusiveStartkey: CountLastKey,
@@ -70,16 +128,22 @@ function SermonList(Options) {
 
 		docClient.scan(params, function(err, data) {
 			if (err) {
-				throw "Unable to describe table. Error: " + "\n" + JSON.stringify(err, undefined, 2);
+				Options.onSermonArchiveError({msg: "Unable to describe table. Error: " + "\n" + JSON.stringify(err, undefined, 2)});
 			} else {
 				TotalItems += data.Count;
 				LastPage = Math.ceil(TotalItems / PerPage);
-				document.getElementById('totalPages').innerHTML = LastPage;
 
 				//If there are more records resend this query with the LastEvaluatedKey
 				if(typeof data.LastEvaluatedKey !== 'undefined') {
 					Init(data.LastEvaluatedKey);
 				} else {
+					//Call afterInit Event and pass in data
+					Options.afterSermonArchiveInit({
+						TotalItems: TotalItems,
+						LastPage: LastPage
+					});
+					
+					//Get first set of sermons
 					queryData();
 				}
 			}
@@ -87,8 +151,11 @@ function SermonList(Options) {
 	};
 	
 	//Define internal functions for retrieving and displaying Sermon List data
-	var queryData = function() {
-		Status.set("Querying Database...", document.getElementById('status'));
+	var queryData = function(sameRequest) {
+		//Call onRequest Event if this is the first call to the queryData function
+		if(typeof sameRequest === 'undefined' || sameRequest == null) {
+			Options.onSermonArchiveRequest();
+		}
 		var params = {
 			TableName: "Sermons",
 			KeyConditionExpression: "#yr = :yyyy",
@@ -105,7 +172,7 @@ function SermonList(Options) {
 		
 		docClient.query(params, function(err, data) {
 			if (err) {
-				throw "Database Query Error: " + "\n" + JSON.stringify(err, undefined, 2);
+				Options.onSermonArchiveError({msg: "Database Query Error: " + "\n" + JSON.stringify(err, undefined, 2)});
 			} else {
 				Sermons = Sermons.concat(data.Items);
 				LastEvaluatedKey = data.LastEvaluatedKey;
@@ -113,11 +180,9 @@ function SermonList(Options) {
 				//If the count is 0, LastEvaluatedKey is undefined, and current page is the same as last page then we have reached the end.
 				//If LastPageCheck is false that means we should check the next year,
 				if(data.Count == 0 && typeof data.LastEvaluatedKey === 'undefined' && CurrentPage == LastPage && LastPageCheck) {
-					Status.set("Loaded from Database.", document.getElementById('status'));
-					displaySermonList();
-					//Disable Next Page Button and set the last page value
-					document.getElementById('next').disabled = true;
 					LastPage = CurrentPage;
+					//Call afterRequest Event
+					afterRequest('Database');
 				//Else If LastEvaluatedKey is not undefined then there are more sermons in this year.
 				} else if(typeof data.LastEvaluatedKey !== 'undefined') {
 					// There are results, if this was a last page check, reset the flag.
@@ -125,11 +190,11 @@ function SermonList(Options) {
 					
 					//If the data loaded is already enough for the current page
 					if(checkCache()) {
-						Status.set("Loaded from Database.", document.getElementById('status'));
-						displaySermonList();
+						//Call afterRequest Event
+						afterRequest('Database');
 					//Otherwise Resubmit the same query with the LastEvaluatedKey
 					} else {
-						queryData();
+						queryData(true);
 					}
 				//Else If LastEvaluatedKey is undefined, then last option is that count is > 0. Sincie it skipped the first IF statement.
 				} else {
@@ -139,11 +204,11 @@ function SermonList(Options) {
 					
 					//If the data loaded is already enough for the current page
 					if(checkCache()) {
-						Status.set("Loaded from Database.", document.getElementById('status'));
-						displaySermonList();
+						//Call afterRequest Event
+						afterRequest('Database');
 					//Otherwise Resubmit the same query with the next year down and no StartKey
 					} else {
-						queryData();
+						queryData(true);
 					}
 				}
 			}
@@ -160,22 +225,11 @@ function SermonList(Options) {
 			CurrentPage--;
 			//If data is already loaded in cache send that;
 			if(checkCache()) {
-				Status.set("Loaded from Cache.", document.getElementById('status'));
-				displaySermonList();
+				//Call afterRequest Event
+				afterRequest('Cache');
 			} else {
 				queryData();
 			}
-
-			//If Page is now at 1 then disable button
-			if(CurrentPage == 1) {
-				document.getElementById('prev').disabled = true;
-			}
-
-			//Enable Next Page Button
-			document.getElementById('next').disabled = false;
-		} else {
-			//Disable Previous Page Button
-			document.getElementById('prev').disabled = true;
 		}
 	};
 	
@@ -185,30 +239,14 @@ function SermonList(Options) {
 			CurrentPage++;
 			//If data is already loaded in cache send that;
 			if(checkCache()) {
-				Status.set("Loaded from Cache.", document.getElementById('status'));
-				displaySermonList();
+				//Call afterRequest Event
+				afterRequest('Cache');
 			} else {
 				queryData();
 			}
-			
-			//If Page is now at last page disable button
-			if(LastPage !== null && CurrentPage >= LastPage) {
-				document.getElementById('next').disabled = true;
-			}
-
-			//Enable Previous Page Button
-			document.getElementById('prev').disabled = false;
-		} else {
-			//Disable Next Page Button
-			document.getElementById('next').disabled = true;
 		}
 	};
 	
-	var displaySermonList = function() {
-		var sermonsToDisplay = Sermons.slice(((CurrentPage * PerPage) - PerPage), (CurrentPage * PerPage));
-		document.getElementById('page').value = CurrentPage;
-		document.getElementById('textarea').innerHTML = JSON.stringify(sermonsToDisplay, undefined, 2);
-	}
-	
+	//Initialize the Sermon Archive
 	Init(null);
 }

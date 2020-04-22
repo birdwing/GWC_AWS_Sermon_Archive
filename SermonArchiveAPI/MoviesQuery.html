@@ -2,14 +2,6 @@
 	<head>
 		<script src="https://sdk.amazonaws.com/js/aws-sdk-2.7.16.min.js"></script>
 		<script src="SermonArchiveAPI.js"></script>
-
-		<script>
-			var SermonListOptions = {
-				Region: 'us-east-1',
-				Identity:'us-east-1:53e682d9-0102-4330-9a82-31216cc10dc4'
-			};
-			var GWCSermonList = new SermonList(SermonListOptions);
-		</script>
 	</head>
 	<body>
 		<div id="SermonList">
@@ -21,4 +13,43 @@
 			<textarea readonly id="textarea" style="width: 800px; height: 800px;"></textarea>
 		</div>
 	</body>
+	<footer>
+		<script>
+			var SermonListOptions = {
+				Region: 'us-east-1',
+				Identity:'us-east-1:53e682d9-0102-4330-9a82-31216cc10dc4',
+				onSermonArchiveError: function(data) {
+					document.getElementById('textarea').innerHTML = data.msg;
+				},
+				onSermonArchiveInit: function() {
+					document.getElementById('status').value = "Inititalizing...";
+				},
+				afterSermonArchiveInit: function(data) {
+					document.getElementById('totalPages').innerHTML = data.LastPage;
+				},
+				onSermonArchiveRequest: function() {
+					document.getElementById('status').value = "Querying Database...";
+				},
+				afterSermonArchiveRequest: function(data) {
+					var sermonsToDisplay = data.Sermons.slice(((data.CurrentPage * data.PerPage) - data.PerPage), (data.CurrentPage * data.PerPage));
+					document.getElementById('status').value = "Loaded from " + data.Source + ".";
+					//Disable Next Page Button if on last page
+					if(data.LastPage == data.CurrentPage) {
+						document.getElementById('next').disabled = true;
+					} else {
+						document.getElementById('next').disabled = false;
+					}
+					//Disable Previous Page Button on first page
+					if(data.CurrentPage == 1) {
+						document.getElementById('prev').disabled = true;
+					} else {
+						document.getElementById('prev').disabled = false;
+					}
+					document.getElementById('page').value = data.CurrentPage;
+					document.getElementById('textarea').innerHTML = JSON.stringify(sermonsToDisplay, undefined, 2);
+				}
+			};
+			var GWCSermonList = new SermonList(SermonListOptions);
+		</script>
+	</footer>
 </html>
