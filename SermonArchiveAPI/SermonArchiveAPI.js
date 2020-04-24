@@ -113,6 +113,11 @@ function SermonList(Options) {
 		}
 	};
 	
+	//Create function to return full list of Sermons
+	this.getSermons = function() {
+		return Sermons;
+	};
+	
 	//Initialize Object
 	var Init = function(CountLastKey) {
 		//Call onInit Event if this is the first call to the init function
