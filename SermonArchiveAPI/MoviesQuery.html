@@ -2,6 +2,10 @@
 	<head>
 		<script src="https://sdk.amazonaws.com/js/aws-sdk-2.7.16.min.js"></script>
 		<script src="SermonArchiveAPI.js"></script>
+		<script
+  src="https://code.jquery.com/jquery-3.5.0.min.js"
+  integrity="sha256-xNzN2a4ltkB44Mc/Jz3pT4iU1cmeR0FkXs4pru/JxaQ="
+  crossorigin="anonymous"></script>
 	</head>
 	<body>
 		<div id="SermonList">
@@ -62,6 +66,7 @@
 				
 				//Get specific sermon
 				var Sermons = GWCSermonList.getSermons();
+				//Check through sermon array to find sermon. If it's found get scripture
 				Sermons.some(function(sermon) {
 					if(sermon.year === year) {
 						if(sermon.date === date) {
@@ -78,7 +83,26 @@
 									'<div class="col-sm-5 col-md-4">' +
 										'<h3>' + dateFormat.format(new Date(sermon.date)) + '</h3>' +
 										'<h3>' + sermon.info.speaker + '</h3><p></p>' +
-										'<div class="scripture">' + sermon.info.scripture + '</div>' +
+										'<div id="ScriptureContainer">' +
+											'<div class="panel-group" id="scriptureaccordion" role="tablist">' +
+												'<div class="panel panel-default">' +
+													'<div class="panel-heading" role="tab" id="scriptureheading">' +
+														'<h4 class="panel-title">' +
+															'<a href="#scripture" role="button" data-toggle="collapse" data-parent="#scriptureaccordion" aria-expanded="false" aria-controls="scripture">Click to See Main Scripture</a>' +
+														'</h4>' +
+													'</div>' +
+													'<div id="scripture" class="panel-collapse collapse" role="tabpenal" aria-labelledby="scriptureheading">' +
+														'<div class="panel-body">' +
+															'<center><b>Book Chapter (John 3)</b></center><br>' +
+															'<p class="ltr">  ' +
+																'<small class="ltr">34</small>  Verse goes here' +
+																'<br>  <small class="ltr">35</small>  Verse will go here' +
+															'</p>' +
+														'</div>' +
+													'</div>' +
+												'</div>' +
+											'</div>' +
+										'</div>' +
 									'</div>' +
 									'<div class="col-sm-7 col-md-8">' +
 										'<ul class="nav nav-tabs" role="tablist">' +
@@ -110,6 +134,7 @@
 									'</div>' +
 								'</div>';
 							sermonContainer.innerHTML = sermonHTML;
+							GetScripture(sermon.info.scripture);
 							return true;
 						}
 					}
@@ -121,6 +146,64 @@
 				sermonContainer.setAttribute("style", "display: none;");
 				//Display Sermon List
 				sermonsContainer.setAttribute("style", "display: initial;");
+			}
+			
+			function GetScripture(scripture) {
+				jQuery.ajax({
+					url:'https://getbible.net/json?scrip=' + scripture,
+					dataType: 'jsonp',
+					jsonp: 'getbible',
+					success:function(json){
+							// Remove loading animation
+							jQuery('#scripture .panel-body').empty();
+							// set text direction
+							if (json.direction == 'RTL'){
+								var direction = 'rtl';
+							} else {
+								var direction = 'ltr'; 
+							}
+							// check response type
+							if (json.type == 'verse'){
+									var output = '';
+										jQuery.each(json.book, function(index, value) {
+												output += '<center><b>'+value.book_name+' '+value.chapter_nr+'</b></center><br/><p class="'+direction+'">';
+													jQuery.each(value.chapter, function(index, value) {
+															output += '  <small class="ltr">' +value.verse_nr+ '</small>  ';
+															output += value.verse;
+															output += '<br/>';
+													});
+													output += '</p>';
+										});
+									jQuery('#scripture .panel-body').html(output);  // <---- this is the div id we update
+							} else if (json.type == 'chapter'){
+									var output = '<center><b>'+json.book_name+' '+json.chapter_nr+'</b></center><br/><p class="'+direction+'">';
+									jQuery.each(json.chapter, function(index, value) {
+											output += '  <small class="ltr">' +value.verse_nr+ '</small>  ';
+											output += value.verse;
+											output += '<br/>';
+									});
+									output += '</p>';
+									jQuery('#scripture .panel-body').html(output);  // <---- this is the div id we update
+							} else if (json.type == 'book'){
+									var output = '';
+									jQuery.each(json.book, function(index, value) {
+											output += '<center><b>'+json.book_name+' '+value.chapter_nr+'</b></center><br/><p class="'+direction+'">';
+											jQuery.each(value.chapter, function(index, value) {
+													output += '  <small class="ltr">' +value.verse_nr+ '</small>  ';
+													output += value.verse;
+													output += '<br/>';
+											});
+									output += '</p>';
+							});
+							if(addTo){
+								jQuery('#scripture .panel-body').html(output);  // <---- this is the div id we update
+							}
+						}
+					},
+					error:function(){
+							jQuery('#scripture .panel-body').html('<h2>No scripture was returned, please try again!</h2>'); // <---- this is the div id we update
+					 },
+				});
 			}
 			
 			var SermonListOptions = {
