@@ -314,7 +314,7 @@ function SermonList(Options) {
 			//Set current page to page
 			CurrentPage = page;
 			//Call afterRequest Event
-			afterRequest('Cache');
+			afterRequest((sameRequest)?'Database':'Cache');
 		//Otherwise query until target page is reached.
 		} else {
 			CurrentPage++;
