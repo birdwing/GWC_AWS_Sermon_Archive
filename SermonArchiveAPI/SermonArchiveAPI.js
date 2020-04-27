@@ -71,6 +71,12 @@ function SermonList(Options) {
 	if(typeof Options.afterSermonArchiveRequest !== 'function') {
 		throw new TypeError('afterSermonArchiveRequest must be a function.');
 	}
+	//Caller Function for onSermonArchiveRequest
+	var onRequest = function() {
+		Status = 'Loading';
+		Options.onSermonArchiveRequest();
+	}
+	
 	//Caller Function for afterSermonArchiveRequest
 	var afterRequest = function(source) {
 		Options.afterSermonArchiveRequest({
@@ -80,6 +86,7 @@ function SermonList(Options) {
 			CurrentPage: CurrentPage,
 			PerPage: PerPage
 		});
+		Status = 'Ready';
 	}
 	
 	//Setup internal AWS object
@@ -98,20 +105,7 @@ function SermonList(Options) {
 	var TotalItems = 0;
 	var LastPage = null;
 	var LastPageCheck = false;
-	var Status = {
-		_value: "",
-		get: function(){
-			return this._value;
-		},
-		set: function(x, object) {
-			this._value = x;
-			//If a DOM object was passed display the value in that object
-			if(typeof object !== 'undefined' && object !== null) {
-				object.value = this._value;
-			}
-			return this._value;
-		}
-	};
+	var Status = 'Ready';
 	
 	//Create function to return full list of Sermons
 	this.getSermons = function() {
@@ -123,6 +117,7 @@ function SermonList(Options) {
 		//Call onInit Event if this is the first call to the init function
 		if(typeof CountLastKey === 'undefined' || CountLastKey == null) {
 			Options.onSermonArchiveInit();
+			Status = 'Loading';
 		}
 		
 		var params = {
@@ -147,6 +142,7 @@ function SermonList(Options) {
 						TotalItems: TotalItems,
 						LastPage: LastPage
 					});
+					Status = 'Ready';
 					
 					//Get first set of sermons
 					queryData(false, function(res) {
@@ -162,77 +158,80 @@ function SermonList(Options) {
 	
 	//Define internal functions for retrieving and displaying Sermon List data
 	var queryData = function(sameRequest, callback) {
-		//Call onRequest Event if this is the first call to the queryData function
-		if(typeof sameRequest === 'undefined' || sameRequest == null) {
-			Options.onSermonArchiveRequest();
-		}
-		var params = {
-			TableName: "Sermons",
-			KeyConditionExpression: "#yr = :yyyy",
-			ExpressionAttributeNames: {
-				"#yr" : "year"
-			},
-			ExpressionAttributeValues: {
-				":yyyy": CurrentYear
-			},
-			ScanIndexForward: false,
-			ExclusiveStartKey: LastEvaluatedKey,
-			Limit: Limit
-		}
-		
-		docClient.query(params, function(err, data) {
-			if (err) {
-				Options.onSermonArchiveError({msg: "Database Query Error: " + "\n" + JSON.stringify(err, undefined, 2)});
-			} else {
-				Sermons = Sermons.concat(data.Items);
-				LastEvaluatedKey = data.LastEvaluatedKey;
-
-				//If the count is 0, LastEvaluatedKey is undefined, and current page is the same as last page then we have reached the end.
-				//If LastPageCheck is false that means we should check the next year,
-				if(data.Count == 0 && typeof data.LastEvaluatedKey === 'undefined' && CurrentPage == LastPage && LastPageCheck) {
-					LastPage = CurrentPage;
-					//Data get finished
-					return callback(true);
-				//Else If LastEvaluatedKey is not undefined then there are more sermons in this year.
-				} else if(typeof data.LastEvaluatedKey !== 'undefined') {
-					// There are results, if this was a last page check, reset the flag.
-					LastPageCheck = false;
-					
-					//If the data loaded is already enough for the current page
-					if(checkCache()) {
-						//Data get finished
-						return callback(true);
-					//Otherwise Resubmit the same query with the LastEvaluatedKey
-					} else {
-						//Data loaded not yet enough recursive function return
-						return queryData(true, function(res) {
-							if(res) {
-								return callback(true);
-							}
-						});
-					}
-				//Else If LastEvaluatedKey is undefined, then last option is that count is > 0. Sincie it skipped the first IF statement.
+		//If Status = "Loading" and sameRequest is false there is already a query being processed ignore any requests
+		if(Status != 'Loading' || sameRequest === true) {
+			//Call onRequest Event if this is the first call to the queryData function
+			if(sameRequest === false) {
+				onRequest();
+			}
+			var params = {
+				TableName: "Sermons",
+				KeyConditionExpression: "#yr = :yyyy",
+				ExpressionAttributeNames: {
+					"#yr" : "year"
+				},
+				ExpressionAttributeValues: {
+					":yyyy": CurrentYear
+				},
+				ScanIndexForward: false,
+				ExclusiveStartKey: LastEvaluatedKey,
+				Limit: Limit
+			}
+			
+			docClient.query(params, function(err, data) {
+				if (err) {
+					Options.onSermonArchiveError({msg: "Database Query Error: " + "\n" + JSON.stringify(err, undefined, 2)});
 				} else {
-					CurrentYear--;
-					// We moved to the next year, so set the LastPageCheck flag, to check if this is the last year.
-					LastPageCheck = true;
-					
-					//If the data loaded is already enough for the current page
-					if(checkCache()) {
+					Sermons = Sermons.concat(data.Items);
+					LastEvaluatedKey = data.LastEvaluatedKey;
+
+					//If the count is 0, LastEvaluatedKey is undefined, and current page is the same as last page then we have reached the end.
+					//If LastPageCheck is false that means we should check the next year,
+					if(data.Count == 0 && typeof data.LastEvaluatedKey === 'undefined' && CurrentPage == LastPage && LastPageCheck) {
+						LastPage = CurrentPage;
 						//Data get finished
 						return callback(true);
-					//Otherwise Resubmit the same query with the next year down and no StartKey
+					//Else If LastEvaluatedKey is not undefined then there are more sermons in this year.
+					} else if(typeof data.LastEvaluatedKey !== 'undefined') {
+						// There are results, if this was a last page check, reset the flag.
+						LastPageCheck = false;
+						
+						//If the data loaded is already enough for the current page
+						if(checkCache()) {
+							//Data get finished
+							return callback(true);
+						//Otherwise Resubmit the same query with the LastEvaluatedKey
+						} else {
+							//Data loaded not yet enough recursive function return
+							return queryData(true, function(res) {
+								if(res) {
+									return callback(true);
+								}
+							});
+						}
+					//Else If LastEvaluatedKey is undefined, then last option is that count is > 0. Sincie it skipped the first IF statement.
 					} else {
-						//Data loaded not yet enough recursive function return
-						return queryData(true, function(res) {
-							if(res) {
-								return callback(true);
-							}
-						});
+						CurrentYear--;
+						// We moved to the next year, so set the LastPageCheck flag, to check if this is the last year.
+						LastPageCheck = true;
+						
+						//If the data loaded is already enough for the current page
+						if(checkCache()) {
+							//Data get finished
+							return callback(true);
+						//Otherwise Resubmit the same query with the next year down and no StartKey
+						} else {
+							//Data loaded not yet enough recursive function return
+							return queryData(true, function(res) {
+								if(res) {
+									return callback(true);
+								}
+							});
+						}
 					}
 				}
-			}
-		});
+			});
+		}
 	};
 	
 	var checkCache = function(page) {
