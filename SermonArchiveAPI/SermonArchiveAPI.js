@@ -149,14 +149,19 @@ function SermonList(Options) {
 					});
 					
 					//Get first set of sermons
-					queryData();
+					queryData(false, function(res) {
+						if(res) {
+							//Call afterRequest Event
+							afterRequest('Database');
+						}
+					});
 				}
 			}
 		});
 	};
 	
 	//Define internal functions for retrieving and displaying Sermon List data
-	var queryData = function(sameRequest) {
+	var queryData = function(sameRequest, callback) {
 		//Call onRequest Event if this is the first call to the queryData function
 		if(typeof sameRequest === 'undefined' || sameRequest == null) {
 			Options.onSermonArchiveRequest();
@@ -186,8 +191,8 @@ function SermonList(Options) {
 				//If LastPageCheck is false that means we should check the next year,
 				if(data.Count == 0 && typeof data.LastEvaluatedKey === 'undefined' && CurrentPage == LastPage && LastPageCheck) {
 					LastPage = CurrentPage;
-					//Call afterRequest Event
-					afterRequest('Database');
+					//Data get finished
+					return callback(true);
 				//Else If LastEvaluatedKey is not undefined then there are more sermons in this year.
 				} else if(typeof data.LastEvaluatedKey !== 'undefined') {
 					// There are results, if this was a last page check, reset the flag.
@@ -195,11 +200,16 @@ function SermonList(Options) {
 					
 					//If the data loaded is already enough for the current page
 					if(checkCache()) {
-						//Call afterRequest Event
-						afterRequest('Database');
+						//Data get finished
+						return callback(true);
 					//Otherwise Resubmit the same query with the LastEvaluatedKey
 					} else {
-						queryData(true);
+						//Data loaded not yet enough recursive function return
+						return queryData(true, function(res) {
+							if(res) {
+								return callback(true);
+							}
+						});
 					}
 				//Else If LastEvaluatedKey is undefined, then last option is that count is > 0. Sincie it skipped the first IF statement.
 				} else {
@@ -209,19 +219,28 @@ function SermonList(Options) {
 					
 					//If the data loaded is already enough for the current page
 					if(checkCache()) {
-						//Call afterRequest Event
-						afterRequest('Database');
+						//Data get finished
+						return callback(true);
 					//Otherwise Resubmit the same query with the next year down and no StartKey
 					} else {
-						queryData(true);
+						//Data loaded not yet enough recursive function return
+						return queryData(true, function(res) {
+							if(res) {
+								return callback(true);
+							}
+						});
 					}
 				}
 			}
 		});
 	};
 	
-	var checkCache = function() {
-		return ((Sermons.length >= CurrentPage * PerPage) || (Sermons.length === TotalItems));
+	var checkCache = function(page) {
+		//If page wasn't passed use current page
+		if(typeof page === 'undefined' || page == null) {
+			var page = CurrentPage;
+		}
+		return ((Sermons.length >= page * PerPage) || (Sermons.length === TotalItems));
 	};
 	
 	this.PreviousPage = function() {
@@ -233,7 +252,12 @@ function SermonList(Options) {
 				//Call afterRequest Event
 				afterRequest('Cache');
 			} else {
-				queryData();
+				queryData(false, function(res) {
+					if(res) {
+						//Call afterRequest Event
+						afterRequest('Database');
+					}
+				});
 			}
 		}
 	};
@@ -247,10 +271,61 @@ function SermonList(Options) {
 				//Call afterRequest Event
 				afterRequest('Cache');
 			} else {
-				queryData();
+				queryData(false, function(res) {
+					if(res) {
+						//Call afterRequest Event
+						afterRequest('Database');
+					}
+				});
 			}
 		}
 	};
+	
+	this.JumpToPage = function(page, sameRequest) {
+		JumpToPage(page, sameRequest);
+	}
+	
+	var JumpToPage = function(page, sameRequest) {
+		//See if page was passed, if not set it to a default of 6.
+		if(typeof page === 'undefined' || page == null) {
+			throw new TypeError('You must pass which page you are jumping to. Page cannot be null.');
+		}
+		//Make sure page is a number.
+		if(typeof page !== 'number') {
+			throw new TypeError('Page you are jumping too must be a number.');
+		}
+		//Make sure page is not less than 1
+		if(page < 1) {
+			throw new RangeError('Page you are jumping too cannot be less than 1.');
+		}
+		//Make sure page is not greater than last page
+		if(page > LastPage) {
+			throw new RangeError('Page you are jumping to cannot be greater than total number of pages.');
+		}
+		//If sameRequest is not passed set it to false
+		if(typeof sameRequest === 'undefined' || sameRequest == null) {
+			var sameRequest = false;
+		} else {
+			var sameRequest = true;
+		}
+		
+		//If the data loaded is already enough for the current page
+		if(checkCache(page)) {
+			//Set current page to page
+			CurrentPage = page;
+			//Call afterRequest Event
+			afterRequest('Cache');
+		//Otherwise query until target page is reached.
+		} else {
+			CurrentPage++;
+			queryData(sameRequest, function(res) {
+				if(res) {
+					//Call jumptopage again
+					JumpToPage(page, sameRequest);
+				}
+			});
+		}
+	}
 	
 	//Initialize the Sermon Archive
 	Init(null);
