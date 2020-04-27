@@ -244,41 +244,11 @@ function SermonList(Options) {
 	};
 	
 	this.PreviousPage = function() {
-		//Make sure page is greater than 1
-		if(CurrentPage > 1) {
-			CurrentPage--;
-			//If data is already loaded in cache send that;
-			if(checkCache()) {
-				//Call afterRequest Event
-				afterRequest('Cache');
-			} else {
-				queryData(false, function(res) {
-					if(res) {
-						//Call afterRequest Event
-						afterRequest('Database');
-					}
-				});
-			}
-		}
+		JumpToPage((CurrentPage - 1));
 	};
 	
 	this.NextPage = function() {
-		//Make sure page is less than Last Page
-		if(LastPage === null || CurrentPage < LastPage) {
-			CurrentPage++;
-			//If data is already loaded in cache send that;
-			if(checkCache()) {
-				//Call afterRequest Event
-				afterRequest('Cache');
-			} else {
-				queryData(false, function(res) {
-					if(res) {
-						//Call afterRequest Event
-						afterRequest('Database');
-					}
-				});
-			}
-		}
+		JumpToPage((CurrentPage + 1));
 	};
 	
 	this.JumpToPage = function(page, sameRequest) {
