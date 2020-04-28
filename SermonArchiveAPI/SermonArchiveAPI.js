@@ -289,16 +289,18 @@ function SermonList(Options) {
 	}
 	
 	var SaveCookie = function() {
-		var CookieData = {
-			LastEvaluatedKey: LastEvaluatedKey,
-			CurrentYear: CurrentYear,
-			TotalItems: TotalItems,
-			LastPage: LastPage,
-			Sermons: Sermons
+		if(CurrentPage < 3) {
+			var CookieData = {
+				LastEvaluatedKey: LastEvaluatedKey,
+				CurrentYear: CurrentYear,
+				TotalItems: TotalItems,
+				LastPage: LastPage,
+				Sermons: Sermons
+			}
+			var ExpirationDate = CookieExpires();
+			var cookie = [Options.CookieName, '=', JSON.stringify(CookieData), '; expires=', ExpirationDate, '; domain=.', window.location.host.toString(), '; path=/;'].join('');
+			document.cookie = cookie;
 		}
-		var ExpirationDate = CookieExpires();
-		var cookie = [Options.CookieName, '=', JSON.stringify(CookieData), '; expires=', ExpirationDate, '; domain=.', window.location.host.toString(), '; path=/;'].join('');
-		document.cookie = cookie;
 	};
 	
 	var ReadCookie = function() {
