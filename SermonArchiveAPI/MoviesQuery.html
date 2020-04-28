@@ -9,14 +9,6 @@
 	</head>
 	<body>
 		<div id="SermonList">
-			<div class="col-sm-12">
-				<div class="ccm-block-page-list-wrapper">
-					<div id="Sermons" class="ccm-block-page-list-pages" style="display: none;"></div>
-				</div>
-			</div>
-			<div class="col-xs-12">
-				<div id="Sermon" style="display: none;"></div>
-			</div>
 			<div class="col-xs-12">
 				<div id="Loading">
 					<div class="progress">
@@ -24,7 +16,31 @@
 					</div>
 				</div>
 			</div>
-			<div class="col-xs-12">
+			<div class="col-sm-12">
+				<div class="visible-xs-block text-center">
+					<div class="ccm-pagination-wrapper" style="display: initial;">
+						<ul class="pagination">
+							<li class="prev"><a href="#Sermons" rel="prev" onclick="GWCSermonList.PreviousPage(); return false">← Previous</a></li>
+							<li class="next"><a href="#Sermons" rel="next" onclick="GWCSermonList.NextPage(); return false">Next →</a></li>
+						</ul>
+					</div>
+				</div>
+				<div class="ccm-block-page-list-wrapper">
+					<div id="Sermons" class="ccm-block-page-list-pages" style="display: none;"></div>
+				</div>
+				<div class="visible-xs-block text-center">
+					<div class="ccm-pagination-wrapper" style="display: initial;">
+						<ul class="pagination">
+							<li class="prev"><a href="#Sermons" rel="prev" onclick="GWCSermonList.PreviousPage(); return false">← Previous</a></li>
+							<li class="next"><a href="#Sermons" rel="next" onclick="GWCSermonList.NextPage(); return false">Next →</a></li>
+						</ul>
+					</div>
+				</div>
+			</div>
+			<div class="col-xs-12" style="z-index: 20000;">
+				<div id="Sermon" style="display: none;"></div>
+			</div>
+			<div class="col-xs-12 hidden-xs" style="z-index: 20000;">
 				<div id="Pagination" class="ccm-pagination-wrapper">
 				
 				</div>
