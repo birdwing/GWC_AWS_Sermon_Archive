@@ -13,16 +13,20 @@
 				<div class="ccm-block-page-list-wrapper">
 					<div id="Sermons" class="ccm-block-page-list-pages" style="display: none;"></div>
 				</div>
-				<div class="col-xs-12">
-					<div id="Pagination" class="ccm-pagination-wrapper">
-					
+			</div>
+			<div class="col-xs-12">
+				<div id="Sermon" style="display: none;"></div>
+			</div>
+			<div class="col-xs-12">
+				<div id="Loading">
+					<div class="progress">
+						<div class="progress-bar progress-bar-striped progress-bar-animated bg-success" role="progressbar" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100" style="width: 100%"></div>
 					</div>
 				</div>
 			</div>
-			<div id="Sermon" style="display: none;"></div>
-			<div id="Loading">
-				<div class="progress">
-					<div class="progress-bar progress-bar-striped progress-bar-animated bg-success" role="progressbar" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100" style="width: 100%"></div>
+			<div class="col-xs-12">
+				<div id="Pagination" class="ccm-pagination-wrapper">
+				
 				</div>
 			</div>
 		</div>
@@ -43,6 +47,9 @@
 				//Clear anything alredy in the Container
 				sermonsContainer.innerHTML = "";
 				
+				//Display Pagination
+				paginationContainer.setAttribute("style", "display: initial;");
+				
 				//Loop through each sermon and output it.
 				for (i = 0; i < Sermons.length; i++) {
 					var Sermon = Sermons[i];
@@ -50,7 +57,7 @@
 						'<div class="col-sm-6 ccm-block-page-list-page-entry">' +
 							'<div class="ccm-block-page-list-page-entry-text">' +
 								'<div class="ccm-block-page-list-title">' +
-									'<h3><a href="#" class="sermon-link" onclick="DisplaySermon(' + Sermon.year + ", '" + Sermon.date + "'" + ');">' + Sermon.info.title + '</a></h3>' +
+									'<h3><a href="#Sermon" class="sermon-link" onclick="DisplaySermon(' + Sermon.year + ", '" + Sermon.date + "'" + ');">' + Sermon.info.title + '</a></h3>' +
 								'</div>' +
 								'<div class="ccm-block-page-list-date">' +
 									'<h4 class="text-muted">' + dateFormat.format(new Date(Sermon.date)) + '</h4>' +
@@ -59,7 +66,7 @@
 									'<address>' +
 										'<strong>Speaker:</strong> ' + Sermon.info.speaker + '<br />' +
 										'<strong>Scripture:</strong> ' + Sermon.info.scripture + '<br />' +
-										'<a href="#" class="sermon-link btn btn-default" onclick="DisplaySermon(' + Sermon.year + ", '" + Sermon.date + "'" + ');">View Sermon »</a>' +
+										'<a href="#Sermon" class="sermon-link btn btn-default" onclick="DisplaySermon(' + Sermon.year + ", '" + Sermon.date + "'" + ');">View Sermon »</a>' +
 									'</address>' +
 								'</div>' +
 							'</div>' +
@@ -72,6 +79,8 @@
 			function DisplaySermon(year, date) {
 				//Hide Sermon List
 				sermonsContainer.setAttribute("style", "display: none;");
+				//Hide Pagination
+				paginationContainer.setAttribute("style", "display: none;");
 				//Hide Loading Bar
 				LoadingBar.setAttribute("style", "display: none;");
 				//Display Sermon
@@ -89,7 +98,7 @@
 										'<h1 class="page-title">' + sermon.info.title + '</h1>' +
 									'</div>' +
 									'<div class="col-sm-4 col-md-3">' +
-										'<a href="#" class="btn btn-default" onclick="BackToList();">Back to List</a>' +
+										'<a href="#Sermons" class="btn btn-default" onclick="BackToList();">Back to List</a>' +
 									'</div>' +
 								'</div>' +
 								'<div class="row">' +
@@ -127,7 +136,7 @@
 											'</li>' +
 										'</ul>' +
 										'<div class="tab-content">' +
-											'<div class="tab-pan active" id="video" role="tabpanel">' +
+											'<div class="tab-pane active" id="video" role="tabpanel">' +
 												'<div style="text-align:center; margin-top: 20px; margin-bottom: 20px;">' +
 													'<video controls="controls" style="max-width: 100%;">' +
 														'<source src="' + sermon.info.videoURL + '" type="video/mp4">' +
@@ -159,6 +168,8 @@
 				sermonContainer.setAttribute("style", "display: none;");
 				//Display Sermon List
 				sermonsContainer.setAttribute("style", "display: initial;");
+				//Display Pagination
+				paginationContainer.setAttribute("style", "display: initial;");
 			}
 			
 			function GetScripture(scripture) {
@@ -225,13 +236,13 @@
 				var CurrentBtn = '<li class="active"><span>' + current + '<span class="sr-only">(current)</span></span></li>';
 				//If current page is greater than 1 add "1" to prevbtn
 				if(current > 1) {
-					var PrevBtn = '<li class="prev"><a href="#" rel="prev" onclick="GWCSermonList.PreviousPage();">← Previous</a></li><li><a href="#" onclick="GWCSermonList.JumpToPage(1);">1</a></li>';
+					var PrevBtn = '<li class="prev"><a href="#Sermons" rel="prev" onclick="GWCSermonList.PreviousPage();">← Previous</a></li><li><a href="#Sermons" onclick="GWCSermonList.JumpToPage(1);">1</a></li>';
 				} else {
 					var PrevBtn = '<li class="prev disabled"><span>← Previous</span></li>';
 				}
 				//If current page is less than total add last page to NextBtn
 				if(current < total) {
-					var NextBtn = '<li><a href="#" onclick="GWCSermonList.JumpToPage(' + total + ');">' + total + '</a></li><li class="next"><a href="#" rel="next" onclick="GWCSermonList.NextPage();">Next →</a></li>';
+					var NextBtn = '<li><a href="#Sermons" onclick="GWCSermonList.JumpToPage(' + total + ');">' + total + '</a></li><li class="next"><a href="#Sermons" rel="next" onclick="GWCSermonList.NextPage();">Next →</a></li>';
 				} else {
 					var NextBtn = '<li class="next disabled"><span>Next →</span></li>';
 				}
@@ -251,7 +262,7 @@
 				while(BeforePages > 0) {
 					//skip first page
 					if(current - BeforePages > 1) {
-						BeforePagesHTML += '<li><a href="#" onclick="GWCSermonList.JumpToPage(' + (current - BeforePages) + ');">' + (current - BeforePages) + '</a></li>';
+						BeforePagesHTML += '<li><a href="#Sermons" onclick="GWCSermonList.JumpToPage(' + (current - BeforePages) + ');">' + (current - BeforePages) + '</a></li>';
 					}
 					BeforePages--;
 				}
@@ -266,7 +277,7 @@
 				while(AfterPages > 0) {
 					//skip last page
 					if(current + AfterPages < total) {
-						AfterPagesHTML = '<li><a href="#" onclick="GWCSermonList.JumpToPage(' + (current + AfterPages) + ');">' + (current + AfterPages) + '</a></li>' + AfterPagesHTML;
+						AfterPagesHTML = '<li><a href="#Sermons" onclick="GWCSermonList.JumpToPage(' + (current + AfterPages) + ');">' + (current + AfterPages) + '</a></li>' + AfterPagesHTML;
 					}
 					AfterPages--;
 				}
