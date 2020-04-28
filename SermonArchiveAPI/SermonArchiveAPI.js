@@ -57,7 +57,7 @@ function SermonList(Options) {
 	}
 	//If onSermonArchiveRequest function was not passed set it to a blank function
 	if(typeof Options.onSermonArchiveRequest === 'undefined' || Options.onSermonArchiveRequest == null) {
-		Options.onSermonArchiveRequest = function() {};
+		Options.onSermonArchiveRequest = function(data) {};
 	}
 	//Make sure onSermonArchiveRequest is a function
 	if(typeof Options.onSermonArchiveRequest !== 'function') {
@@ -72,9 +72,12 @@ function SermonList(Options) {
 		throw new TypeError('afterSermonArchiveRequest must be a function.');
 	}
 	//Caller Function for onSermonArchiveRequest
-	var onRequest = function() {
+	var onRequest = function(page) {
 		Status = 'Loading';
-		Options.onSermonArchiveRequest();
+		Options.onSermonArchiveRequest({
+			CurrentPage: page,
+			LastPage: LastPage
+		});
 	}
 	
 	//Caller Function for afterSermonArchiveRequest
@@ -162,7 +165,7 @@ function SermonList(Options) {
 		if(Status != 'Loading' || sameRequest === true) {
 			//Call onRequest Event if this is the first call to the queryData function
 			if(sameRequest === false) {
-				onRequest();
+				onRequest(CurrentPage);
 			}
 			var params = {
 				TableName: "Sermons",
