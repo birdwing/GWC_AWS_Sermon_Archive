@@ -9,13 +9,22 @@
 	</head>
 	<body>
 		<div id="SermonList">
-			<b>Status: </b><input id="status" readonly type="text" value="Loading..." /><br />
-			<b>Current Page: </b><input id="page" readonly type="text" value="1" /> of <b id="totalPages"></b><br />
-			<input disabled id="prev" type="button" value="Previous Page" onclick="GWCSermonList.PreviousPage();" />
-			<input id="next" type="button" value="Next Page" onclick="GWCSermonList.NextPage();" />
-			<br/><br/>
-			<div id="Sermons" class="ccm-block-page-list-pages"></div>
-			<div id="Sermon"></div>
+			<div class="col-sm-12">
+				<div class="ccm-block-page-list-wrapper">
+					<div id="Sermons" class="ccm-block-page-list-pages" style="display: none;"></div>
+				</div>
+				<div class="col-xs-12">
+					<div id="Pagination" class="ccm-pagination-wrapper">
+					
+					</div>
+				</div>
+			</div>
+			<div id="Sermon" style="display: none;"></div>
+			<div id="Loading">
+				<div class="progress">
+					<div class="progress-bar progress-bar-striped progress-bar-animated bg-success" role="progressbar" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100" style="width: 100%"></div>
+				</div>
+			</div>
 		</div>
 	</body>
 	<footer>
@@ -28,6 +37,8 @@
 			});
 			var sermonsContainer = document.getElementById('Sermons');
 			var sermonContainer = document.getElementById('Sermon');
+			var paginationContainer = document.getElementById('Pagination');
+			var LoadingBar = document.getElementById('Loading');
 			function DisplaySermons(Sermons) {
 				//Clear anything alredy in the Container
 				sermonsContainer.innerHTML = "";
@@ -54,13 +65,15 @@
 							'</div>' +
 						'</div>';
 
-					document.getElementById('Sermons').innerHTML += sermonsHTML;
+					sermonsContainer.innerHTML += sermonsHTML;
 				}
 			}
 			
 			function DisplaySermon(year, date) {
 				//Hide Sermon List
 				sermonsContainer.setAttribute("style", "display: none;");
+				//Hide Loading Bar
+				LoadingBar.setAttribute("style", "display: none;");
 				//Display Sermon
 				sermonContainer.setAttribute("style", "display: initial;");
 				
@@ -206,43 +219,92 @@
 				});
 			}
 			
+			function updatePagination(current, total) {
+				//<input disabled id="prev" type="button" value="Previous Page" onclick="GWCSermonList.PreviousPage();" />
+				//<input id="next" type="button" value="Next Page" onclick="GWCSermonList.NextPage();" />
+				var CurrentBtn = '<li class="active"><span>' + current + '<span class="sr-only">(current)</span></span></li>';
+				//If current page is greater than 1 add "1" to prevbtn
+				if(current > 1) {
+					var PrevBtn = '<li class="prev"><a href="#" rel="prev" onclick="GWCSermonList.PreviousPage();">← Previous</a></li><li><a href="#" onclick="GWCSermonList.JumpToPage(1);">1</a></li>';
+				} else {
+					var PrevBtn = '<li class="prev disabled"><span>← Previous</span></li>';
+				}
+				//If current page is less than total add last page to NextBtn
+				if(current < total) {
+					var NextBtn = '<li><a href="#" onclick="GWCSermonList.JumpToPage(' + total + ');">' + total + '</a></li><li class="next"><a href="#" rel="next" onclick="GWCSermonList.NextPage();">Next →</a></li>';
+				} else {
+					var NextBtn = '<li class="next disabled"><span>Next →</span></li>';
+				}
+				var BeforePages = 3; //Number of pages to show before current page
+				var BeforePagesHTML = '';
+				var AfterPages = 3; //Number of pages to show after current page
+				var AfterPagesHTML = '';
+				var PaginationHTML = '';
+				//If Current Page is less than 5 adjust before pages by difference
+				if(current < 5) {
+					BeforePages -= (4 - current);
+				} else if (current > 5) {
+					//Add spacer
+					BeforePagesHTML += '<li class="disabled"><span>...</span></li>';
+				}
+				//Loop through and add before pages
+				while(BeforePages > 0) {
+					//skip first page
+					if(current - BeforePages > 1) {
+						BeforePagesHTML += '<li><a href="#" onclick="GWCSermonList.JumpToPage(' + (current - BeforePages) + ');">' + (current - BeforePages) + '</a></li>';
+					}
+					BeforePages--;
+				}
+				//If Current page is within 4 of last page
+				if(current > (total - 4)) {
+					AfterPages -= (current - (total - 3));
+				} else if (current < (total -4)) {
+					//Add spacer
+					AfterPagesHTML = '<li class="disabled"><span>...</span></li>';
+				}
+				//Loop through and add after pages
+				while(AfterPages > 0) {
+					//skip last page
+					if(current + AfterPages < total) {
+						AfterPagesHTML = '<li><a href="#" onclick="GWCSermonList.JumpToPage(' + (current + AfterPages) + ');">' + (current + AfterPages) + '</a></li>' + AfterPagesHTML;
+					}
+					AfterPages--;
+				}
+				
+				//Combine all the pieces
+				PaginationHTML = '<ul class="pagination">' + PrevBtn + BeforePagesHTML + CurrentBtn + AfterPagesHTML + NextBtn + '</ul>';
+				
+				paginationContainer.innerHTML = PaginationHTML;
+			}
+			
 			var SermonListOptions = {
 				Region: 'us-east-1',
 				Identity:'us-east-1:53e682d9-0102-4330-9a82-31216cc10dc4',
 				onSermonArchiveError: function(data) {
 					document.getElementById('textarea').innerHTML = data.msg;
 				},
-				onSermonArchiveInit: function() {
-					document.getElementById('status').value = "Inititalizing...";
-				},
 				afterSermonArchiveInit: function(data) {
-					document.getElementById('totalPages').innerHTML = data.LastPage;
+					updatePagination(1, data.LastPage);
 				},
-				onSermonArchiveRequest: function() {
-					document.getElementById('status').value = "Querying Database...";
+				onSermonArchiveRequest: function(data) {
+					//Hide Individual Sermon
+					sermonContainer.setAttribute("style", "display: none;");
+					//Hide Sermon List
+					sermonsContainer.setAttribute("style", "display: none;");
+					//Display Loading Bar
+					LoadingBar.setAttribute("style", "display: initial;");
 				},
 				afterSermonArchiveRequest: function(data) {
 					var sermonsToDisplay = data.Sermons.slice(((data.CurrentPage * data.PerPage) - data.PerPage), (data.CurrentPage * data.PerPage));
-					document.getElementById('status').value = "Loaded from " + data.Source + ".";
-					//Disable Next Page Button if on last page
-					if(data.LastPage == data.CurrentPage) {
-						document.getElementById('next').disabled = true;
-					} else {
-						document.getElementById('next').disabled = false;
-					}
-					//Disable Previous Page Button on first page
-					if(data.CurrentPage == 1) {
-						document.getElementById('prev').disabled = true;
-					} else {
-						document.getElementById('prev').disabled = false;
-					}
+					//we need to update pagination
+					updatePagination(data.CurrentPage, data.LastPage);
 					//Display Sermon List
 					sermonsContainer.setAttribute("style", "display: initial;");
+					DisplaySermons(sermonsToDisplay);
 					//Hide Individual Sermon
 					sermonContainer.setAttribute("style", "display: none;");
-					
-					document.getElementById('page').value = data.CurrentPage;
-					DisplaySermons(sermonsToDisplay);
+					//Hide Loading Bar
+					LoadingBar.setAttribute("style", "display: none;");
 				}
 			};
 			var GWCSermonList = new SermonList(SermonListOptions);
