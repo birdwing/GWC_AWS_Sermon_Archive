@@ -252,13 +252,13 @@
 				var CurrentBtn = '<li class="active"><span>' + current + '<span class="sr-only">(current)</span></span></li>';
 				//If current page is greater than 1 add "1" to prevbtn
 				if(current > 1) {
-					var PrevBtn = '<li class="prev"><a href="#Sermons" rel="prev" onclick="GWCSermonList.PreviousPage();">← Previous</a></li><li><a href="#Sermons" onclick="GWCSermonList.JumpToPage(1);">1</a></li>';
+					var PrevBtn = '<li class="prev"><a href="#Sermons" rel="prev" onclick="GWCSermonList.PreviousPage(); return false">← Previous</a></li><li><a href="#Sermons" onclick="GWCSermonList.JumpToPage(1); return false">1</a></li>';
 				} else {
 					var PrevBtn = '<li class="prev disabled"><span>← Previous</span></li>';
 				}
 				//If current page is less than total add last page to NextBtn
 				if(current < total) {
-					var NextBtn = '<li><a href="#Sermons" onclick="GWCSermonList.JumpToPage(' + total + ');">' + total + '</a></li><li class="next"><a href="#Sermons" rel="next" onclick="GWCSermonList.NextPage();">Next →</a></li>';
+					var NextBtn = '<li><a href="#Sermons" onclick="GWCSermonList.JumpToPage(' + total + '); return false">' + total + '</a></li><li class="next"><a href="#Sermons" rel="next" onclick="GWCSermonList.NextPage(); return false">Next →</a></li>';
 				} else {
 					var NextBtn = '<li class="next disabled"><span>Next →</span></li>';
 				}
@@ -278,7 +278,7 @@
 				while(BeforePages > 0) {
 					//skip first page
 					if(current - BeforePages > 1) {
-						BeforePagesHTML += '<li><a href="#Sermons" onclick="GWCSermonList.JumpToPage(' + (current - BeforePages) + ');">' + (current - BeforePages) + '</a></li>';
+						BeforePagesHTML += '<li><a href="#Sermons" onclick="GWCSermonList.JumpToPage(' + (current - BeforePages) + '); return false">' + (current - BeforePages) + '</a></li>';
 					}
 					BeforePages--;
 				}
@@ -293,7 +293,7 @@
 				while(AfterPages > 0) {
 					//skip last page
 					if(current + AfterPages < total) {
-						AfterPagesHTML = '<li><a href="#Sermons" onclick="GWCSermonList.JumpToPage(' + (current + AfterPages) + ');">' + (current + AfterPages) + '</a></li>' + AfterPagesHTML;
+						AfterPagesHTML = '<li><a href="#Sermons" onclick="GWCSermonList.JumpToPage(' + (current + AfterPages) + '); return false">' + (current + AfterPages) + '</a></li>' + AfterPagesHTML;
 					}
 					AfterPages--;
 				}
