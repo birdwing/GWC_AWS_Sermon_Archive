@@ -19,6 +19,14 @@ function SermonList(Options) {
 	if(typeof Options.ItemsPerPage !== 'number') {
 		throw new TypeError('ItemsPerPage option must be a number.');
 	}
+	//See if CookieName was passed, if not set it to a default of "SermonArchive".
+	if(typeof Options.CookieName === 'undefined' || Options.CookieName == null) {
+		Options.CookieName = "SermonArchive";
+	}
+	//Make sure CookieName is a string.
+	if(typeof Options.CookieName !== 'string') {
+		throw new TypeError('CookieName options must be a string.');
+	}
 	//Make sure Region Option exists
 	if(typeof Options.Region === 'undefined' || Options.Region == null) {
 		throw new TypeError('Region option must be defined, and be a valid AWS region.');
@@ -90,6 +98,8 @@ function SermonList(Options) {
 			PerPage: PerPage
 		});
 		Status = 'Ready';
+		//Save Data into Cookie
+		SaveCookie();
 	}
 	
 	//Setup internal AWS object
@@ -128,35 +138,55 @@ function SermonList(Options) {
 			ExclusiveStartkey: CountLastKey,
 			Select: "COUNT"
 		};
-
-		docClient.scan(params, function(err, data) {
-			if (err) {
-				Options.onSermonArchiveError({msg: "Unable to describe table. Error: " + "\n" + JSON.stringify(err, undefined, 2)});
-			} else {
-				TotalItems += data.Count;
-				LastPage = Math.ceil(TotalItems / PerPage);
-
-				//If there are more records resend this query with the LastEvaluatedKey
-				if(typeof data.LastEvaluatedKey !== 'undefined') {
-					Init(data.LastEvaluatedKey);
+		
+		//Check if cookie exists, if not get data from database
+		var Cookie = ReadCookie();
+		if(typeof Cookie === 'undefined' || Cookie == null) {
+			docClient.scan(params, function(err, data) {
+				if (err) {
+					Options.onSermonArchiveError({msg: "Unable to describe table. Error: " + "\n" + JSON.stringify(err, undefined, 2)});
 				} else {
-					//Call afterInit Event and pass in data
-					Options.afterSermonArchiveInit({
-						TotalItems: TotalItems,
-						LastPage: LastPage
-					});
-					Status = 'Ready';
-					
-					//Get first set of sermons
-					queryData(false, function(res) {
-						if(res) {
-							//Call afterRequest Event
-							afterRequest('Database');
-						}
-					});
+					TotalItems += data.Count;
+					LastPage = Math.ceil(TotalItems / PerPage);
+
+					//If there are more records resend this query with the LastEvaluatedKey
+					if(typeof data.LastEvaluatedKey !== 'undefined') {
+						Init(data.LastEvaluatedKey);
+					} else {
+						//Call afterInit Event and pass in data
+						Options.afterSermonArchiveInit({
+							TotalItems: TotalItems,
+							LastPage: LastPage
+						});
+						Status = 'Ready';
+						
+						//Get first set of sermons
+						queryData(false, function(res) {
+							if(res) {
+								//Call afterRequest Event
+								afterRequest('Database');
+							}
+						});
+					}
 				}
-			}
-		});
+			});
+		} else {
+			//Cookie exists load data from cookie
+			LastEvaluatedKey = Cookie.LastEvaluatedKey;
+			CurrentYear = Cookie.CurrentYear;
+			TotalItems = Cookie.TotalItems;
+			LastPage = Cookie.LastPage;
+			Sermons = Cookie.Sermons;
+			//Call afterInit Event and pass in data
+			Options.afterSermonArchiveInit({
+				TotalItems: TotalItems,
+				LastPage: LastPage
+			});
+			Status = 'Ready';
+
+			//Call afterRequest Event
+			afterRequest('Cookie');
+		}
 	};
 	
 	//Define internal functions for retrieving and displaying Sermon List data
@@ -244,6 +274,42 @@ function SermonList(Options) {
 		}
 		return ((Sermons.length >= page * PerPage) || (Sermons.length === TotalItems));
 	};
+	
+	var CookieExpires = function() {
+		var CurrentDate = new Date(new Date().toDateString() + " 00:00:00 GMT-0400");
+		//Increment by 1 day until its either Sunday or Wednesday
+		while(CurrentDate.getDay() !== 0 && CurrentDate.getDay() !== 3) {
+			CurrentDate.setDate(CurrentDate.getDate() + 1);
+		}
+		//If it's a sunday set the time to 4:00PM
+		if(CurrentDate.getDay() == 0) {
+			CurrentDate.setHours(16);
+		}
+		return CurrentDate.toGMTString();
+	}
+	
+	var SaveCookie = function() {
+		var CookieData = {
+			LastEvaluatedKey: LastEvaluatedKey,
+			CurrentYear: CurrentYear,
+			TotalItems: TotalItems,
+			LastPage: LastPage,
+			Sermons: Sermons
+		}
+		var ExpirationDate = CookieExpires();
+		var cookie = [Options.CookieName, '=', JSON.stringify(CookieData), '; expires=', ExpirationDate, '; domain=.', window.location.host.toString(), '; path=/;'].join('');
+		document.cookie = cookie;
+	};
+	
+	var ReadCookie = function() {
+		try {
+			var result = document.cookie.match(new RegExp(Options.CookieName + '=([^;]+)'));
+			result && (result = JSON.parse(result[1]));
+			return result;
+		} catch {
+			return null;
+		}
+	}
 	
 	this.PreviousPage = function() {
 		JumpToPage((CurrentPage - 1));
