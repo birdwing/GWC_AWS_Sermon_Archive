@@ -308,6 +308,16 @@
 				paginationContainer.innerHTML = PaginationHTML;
 			}
 			
+			// Check url for date parameter to possibly load specific sermon
+			const queryString = window.location.search;
+			const urlParams = new URLSearchParams(queryString);
+			var specificSermon = false;
+
+			// check if date Parameter exists
+			if(urlParams.has('s')) {
+				specificSermon = true;
+			}
+			
 			var SermonListOptions = {
 				Region: 'us-east-1',
 				Identity:'us-east-1:53e682d9-0102-4330-9a82-31216cc10dc4',
@@ -327,11 +337,34 @@
 					var sermonsToDisplay = data.Sermons.slice(((data.CurrentPage * data.PerPage) - data.PerPage), (data.CurrentPage * data.PerPage));
 					//we need to update pagination
 					updatePagination(data.CurrentPage, data.LastPage);
-					//Display Sermon List
-					sermonsContainer.setAttribute("style", "display: initial;");
+					//Hide Sermon List
+					sermonsContainer.setAttribute("style", "display: none;");
+					//Load sermon list
 					DisplaySermons(sermonsToDisplay);
-					//Hide Individual Sermon
-					sermonContainer.setAttribute("style", "display: none;");
+					//If not a specific sermon
+					if(!specificSermon) {
+						//Display Sermon List
+						sermonsContainer.setAttribute("style", "display: initial;");
+						//Hide Individual Sermon
+						sermonContainer.setAttribute("style", "display: none;");
+					} else {
+						//Set specific sermon to false after initial load so it doesn't reload at every page change
+						specificSermon = false;
+
+						//Attempt to load single sermon from parameter
+						GWCSermonList.getSermon(urlParams.get('s'), function(data) {
+							if(data) {
+								LoadSermon(data);
+							} else {
+								//Display Sermon List
+								sermonsContainer.setAttribute("style", "display: initial;");
+								//Hide Individual Sermon
+								sermonContainer.setAttribute("style", "display: none;");
+								//Hide Loading Bar
+								LoadingBar.setAttribute("style", "display: none;");
+							}
+						});
+					}
 					//Hide Loading Bar
 					LoadingBar.setAttribute("style", "display: none;");
 				}
