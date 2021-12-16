@@ -120,25 +120,16 @@ function SermonList(Options) {
 	var LastPageCheck = false;
 	var Status = 'Ready';
 	
-	//Create variable to store a sermon if it was requested directly
-	var SingleSermon = {};
-	SingleSermon.error = false;
-	SingleSermon.msg = "";
-	SingleSermon.sermon = null;
-	
 	//Create function to return full list of Sermons
 	this.getSermons = function() {
 		return Sermons;
 	};
 	
 	//Create function to get a sermon by date
-	this.getSermon = function(sermonDate) {
-		SingleSermon.error = false;
-		SingleSermon.msg = "";
-		SingleSermon.sermon = null;
+	this.getSermon = function(sermonDate, callback) {
 		if(typeof sermonDate === 'undefined') {
-			SingleSermon.error = true;
-			SingleSermon.msg = "Date must be specified in order to request a specific sermon.";
+			throw new TypeError('Date must be specified in order to request a specific sermon');
+			callback(false);
 		}
 		var sermonParams = {
 			TableName: "Sermons",
@@ -156,13 +147,12 @@ function SermonList(Options) {
 
 		docClient.query(sermonParams, function(err, data) {
 			if (err) {
-				SingleSermon.error = true;
-				SingleSermon.msg = "Database Query Error: " + "\n" + JSON.stringify(err, undefined, 2);
+				throw new Error("Database Query Error: " + "\n" + JSON.stringify(err, undefined, 2));
+				callback(false);
 			} else {
-				SingleSermon.sermon = data.Items[0];
+				callback(data.Items[0]);
 			}
 		});
-		return SingleSermon;
 	}
 	
 	//Initialize Object
