@@ -93,6 +93,19 @@
 			}
 			
 			function DisplaySermon(year, date) {
+				//Get specific sermon
+				var Sermons = GWCSermonList.getSermons();
+				//Check through sermon array to find sermon. If it's found get scripture
+				Sermons.some(function(sermon) {
+					if(sermon.year === year) {
+						if(sermon.date === date) {
+							return LoadSermon(sermon);
+						}
+					}
+				});
+			}
+			
+			function LoadSermon(sermon) {
 				//Hide Sermon List
 				sermonsContainer.setAttribute("style", "display: none;");
 				//Hide Pagination
@@ -101,82 +114,73 @@
 				LoadingBar.setAttribute("style", "display: none;");
 				//Display Sermon
 				sermonContainer.setAttribute("style", "display: initial;");
-				
-				//Get specific sermon
-				var Sermons = GWCSermonList.getSermons();
-				//Check through sermon array to find sermon. If it's found get scripture
-				Sermons.some(function(sermon) {
-					if(sermon.year === year) {
-						if(sermon.date === date) {
-							var sermonHTML = '' +
-								'<div class="row">' +
-									'<div class="col-sm-8 col-md-9">' +
-										'<h1 class="page-title">' + sermon.info.title + '</h1>' +
-									'</div>' +
-									'<div class="col-sm-4 col-md-3">' +
-										'<a href="#Sermons" class="btn btn-default" onclick="BackToList();">Back to List</a>' +
+
+				var sermonHTML = '' +
+					'<div class="row">' +
+						'<div class="col-sm-8 col-md-9">' +
+							'<h1 class="page-title">' + sermon.info.title + '</h1>' +
+						'</div>' +
+						'<div class="col-sm-4 col-md-3">' +
+							'<a href="#Sermons" class="btn btn-default" onclick="BackToList();">Back to List</a>' +
+						'</div>' +
+					'</div>' +
+					'<div class="row">' +
+						'<div class="col-sm-5 col-md-4">' +
+							'<h3>' + dateFormat.format(new Date(sermon.date)) + '</h3>' +
+							'<h3>' + sermon.info.speaker + '</h3><p></p>' +
+							'<div id="ScriptureContainer">' +
+								'<div class="panel-group" id="scriptureaccordion" role="tablist">' +
+									'<div class="panel panel-default">' +
+										'<div class="panel-heading" role="tab" id="scriptureheading">' +
+											'<h4 class="panel-title">' +
+												'<a href="#scripture" role="button" data-toggle="collapse" data-parent="#scriptureaccordion" aria-expanded="false" aria-controls="scripture">Click to See Main Scripture</a>' +
+											'</h4>' +
+										'</div>' +
+										'<div id="scripture" class="panel-collapse collapse" role="tabpenal" aria-labelledby="scriptureheading">' +
+											'<div class="panel-body">' +
+												'<center><b>Book Chapter (John 3)</b></center><br>' +
+												'<p class="ltr">  ' +
+													'<small class="ltr">34</small>  Verse goes here' +
+													'<br>  <small class="ltr">35</small>  Verse will go here' +
+												'</p>' +
+											'</div>' +
+										'</div>' +
 									'</div>' +
 								'</div>' +
-								'<div class="row">' +
-									'<div class="col-sm-5 col-md-4">' +
-										'<h3>' + dateFormat.format(new Date(sermon.date)) + '</h3>' +
-										'<h3>' + sermon.info.speaker + '</h3><p></p>' +
-										'<div id="ScriptureContainer">' +
-											'<div class="panel-group" id="scriptureaccordion" role="tablist">' +
-												'<div class="panel panel-default">' +
-													'<div class="panel-heading" role="tab" id="scriptureheading">' +
-														'<h4 class="panel-title">' +
-															'<a href="#scripture" role="button" data-toggle="collapse" data-parent="#scriptureaccordion" aria-expanded="false" aria-controls="scripture">Click to See Main Scripture</a>' +
-														'</h4>' +
-													'</div>' +
-													'<div id="scripture" class="panel-collapse collapse" role="tabpenal" aria-labelledby="scriptureheading">' +
-														'<div class="panel-body">' +
-															'<center><b>Book Chapter (John 3)</b></center><br>' +
-															'<p class="ltr">  ' +
-																'<small class="ltr">34</small>  Verse goes here' +
-																'<br>  <small class="ltr">35</small>  Verse will go here' +
-															'</p>' +
-														'</div>' +
-													'</div>' +
-												'</div>' +
-											'</div>' +
-										'</div>' +
+							'</div>' +
+						'</div>' +
+						'<div class="col-sm-7 col-md-8">' +
+							'<ul class="nav nav-tabs" role="tablist">' +
+								'<li role="presentation" class="active">' +
+									'<a href="#video" aria-controls="video" role="tab" data-toggle="tab">Watch Video</a>' +
+								'</li>' +
+								'<li role="presentation">' +
+									'<a href="#audio" aria-controls="audio" role="tab" data-toggle="tab">Listen to Audio</a>' +
+								'</li>' +
+							'</ul>' +
+							'<div class="tab-content">' +
+								'<div class="tab-pane active" id="video" role="tabpanel">' +
+									'<div style="text-align:center; margin-top: 20px; margin-bottom: 20px;">' +
+										'<video controls="controls" style="max-width: 100%;">' +
+											'<source src="' + sermon.info.videoURL + '" type="video/mp4">' +
+											"Your browser doesn't support the HTML5 video tag." +
+										'</video>' +
 									'</div>' +
-									'<div class="col-sm-7 col-md-8">' +
-										'<ul class="nav nav-tabs" role="tablist">' +
-											'<li role="presentation" class="active">' +
-												'<a href="#video" aria-controls="video" role="tab" data-toggle="tab">Watch Video</a>' +
-											'</li>' +
-											'<li role="presentation">' +
-												'<a href="#audio" aria-controls="audio" role="tab" data-toggle="tab">Listen to Audio</a>' +
-											'</li>' +
-										'</ul>' +
-										'<div class="tab-content">' +
-											'<div class="tab-pane active" id="video" role="tabpanel">' +
-												'<div style="text-align:center; margin-top: 20px; margin-bottom: 20px;">' +
-													'<video controls="controls" style="max-width: 100%;">' +
-														'<source src="' + sermon.info.videoURL + '" type="video/mp4">' +
-														"Your browser doesn't support the HTML5 video tag." +
-													'</video>' +
-												'</div>' +
-											'</div>' +
-											'<div class="tab-pane" id="audio" role="tabpanel">' +
-												'<div style="text-align:center; margin-top: 20px; margin-bottom: 20px;">' +
-													'<audio controls="controls" style="max-width: 100%;">' +
-														'<source src="' + sermon.info.audioURL + '" type="audio/mp3">' +
-														"Your browser doesn't support the HTML5 audio tag." +
-													'</audio>' +
-												'</div>' +
-											'</div>' +
-										'</div>' +
+								'</div>' +
+								'<div class="tab-pane" id="audio" role="tabpanel">' +
+									'<div style="text-align:center; margin-top: 20px; margin-bottom: 20px;">' +
+										'<audio controls="controls" style="max-width: 100%;">' +
+											'<source src="' + sermon.info.audioURL + '" type="audio/mp3">' +
+											"Your browser doesn't support the HTML5 audio tag." +
+										'</audio>' +
 									'</div>' +
-								'</div>';
-							sermonContainer.innerHTML = sermonHTML;
-							GetScripture(sermon.info.scripture);
-							return true;
-						}
-					}
-				});
+								'</div>' +
+							'</div>' +
+						'</div>' +
+					'</div>';
+				sermonContainer.innerHTML = sermonHTML;
+				GetScripture(sermon.info.scripture);
+				return true;
 			}
 			
 			function BackToList() {
