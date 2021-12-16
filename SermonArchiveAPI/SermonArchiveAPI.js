@@ -120,10 +120,50 @@ function SermonList(Options) {
 	var LastPageCheck = false;
 	var Status = 'Ready';
 	
+	//Create variable to store a sermon if it was requested directly
+	var SingleSermon = {};
+	SingleSermon.error = false;
+	SingleSermon.msg = "";
+	SingleSermon.sermon = null;
+	
 	//Create function to return full list of Sermons
 	this.getSermons = function() {
 		return Sermons;
 	};
+	
+	//Create function to get a sermon by date
+	this.getSermon = function(sermonDate) {
+		SingleSermon.error = false;
+		SingleSermon.msg = "";
+		SingleSermon.sermon = null;
+		if(typeof sermonDate === 'undefined') {
+			SingleSermon.error = true;
+			SingleSermon.msg = "Date must be specified in order to request a specific sermon.";
+		}
+		var sermonParams = {
+			TableName: "Sermons",
+			KeyConditionExpression: "#kn0 = :kv0 AND #kn1 = :kv1",
+			ExpressionAttributeNames: {
+				"#kn0" : "year",
+				"#kn1" : "date"
+			},
+			ExpressionAttributeValues: {
+				":kv0": parseInt(sermonDate.substring(0,4)),
+				":kv1": sermonDate
+			},
+			Limit: 1
+		}
+
+		docClient.query(sermonParams, function(err, data) {
+			if (err) {
+				SingleSermon.error = true;
+				SingleSermon.msg = "Database Query Error: " + "\n" + JSON.stringify(err, undefined, 2);
+			} else {
+				SingleSermon.sermon = data.Items[0];
+			}
+		});
+		return SingleSermon;
+	}
 	
 	//Initialize Object
 	var Init = function(CountLastKey) {
